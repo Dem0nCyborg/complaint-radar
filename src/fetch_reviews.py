@@ -134,7 +134,7 @@ def main() -> None:
                 pbar.update(next_byte_offset - current_byte_offset)
                 current_byte_offset = next_byte_offset
 
-                if scanned_this_run % config.FETCH_CHECKPOINT_INTERVAL == 0:
+                if scanned_this_run % config.CHECKPOINT_INTERVAL == 0:
                     out_f.flush()
                     save_checkpoint(
                         {

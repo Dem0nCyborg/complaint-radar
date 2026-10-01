@@ -71,9 +71,11 @@ Output: `data/processed/complaint_radar.duckdb` and
     interruption costs you re-scanning only what's left, not what's
     already done -- see CLAUDE.md #16 for why this needed a custom reader
     instead of the `datasets` library's own streaming/resume.
-  - `ingest_metadata.py` does **not** have this same resume (it's a single
-    streaming pass over the much smaller ~12GB metadata file); an
-    interrupted metadata run has to restart from scratch.
+  - `ingest_metadata.py` uses the same byte-offset checkpoint/resume
+    (`data/interim/ingest_metadata_checkpoint.json`) over the smaller
+    ~12GB metadata file -- see CLAUDE.md #17 for why it also had to drop
+    `datasets` streaming (it crashed around row 319K on a schema change
+    partway through the file).
 - Both `ingest_metadata.py` and `fetch_reviews.py` accept a `--limit N`
   flag. **This is a development/smoke-test knob only** (caps rows scanned
   for a fast dry run) -- omit it for real runs.

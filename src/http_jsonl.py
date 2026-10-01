@@ -29,13 +29,19 @@ def get_content_length(url: str, timeout: int = 30) -> int | None:
         return None
 
 
-def _stream_jsonl_from_byte(url: str, start_byte: int, chunk_size: int, timeout: int) -> Iterator[tuple[int, dict]]:
-    """Yields (offset_of_next_line_start, parsed_json_obj).
+def _stream_lines_from_byte(url: str, start_byte: int, chunk_size: int, timeout: int) -> Iterator[tuple[int, bytes]]:
+    """Yields (offset_of_next_line_start, raw_line_bytes) for each non-empty line.
 
     `start_byte` MUST be the byte offset of the start of a line -- either 0,
     or a value this same function previously yielded (and the caller fully
     processed). A `Range` request can land mid-line, so never pass an
     arbitrary offset.
+
+    Deliberately does NOT parse JSON itself: callers that need to tolerate
+    malformed/unexpected rows (e.g. ingest_metadata.py, after a `datasets`
+    Arrow-cast crash on a schema-inconsistent row -- see CLAUDE.md #17) do
+    their own per-line `json.loads` with their own error handling, instead
+    of one bad line taking down the whole scan.
     """
     headers = {"Range": f"bytes={start_byte}-"} if start_byte else {}
     with requests.get(url, headers=headers, stream=True, timeout=timeout) as resp:
@@ -51,21 +57,21 @@ def _stream_jsonl_from_byte(url: str, start_byte: int, chunk_size: int, timeout:
                 offset += len(line) + 1
                 stripped = line.strip()
                 if stripped:
-                    yield offset, json.loads(stripped)
+                    yield offset, stripped
         stripped = buffer.strip()
         if stripped:
             offset += len(buffer)
-            yield offset, json.loads(stripped)
+            yield offset, stripped
 
 
-def iter_jsonl_resumable(
+def iter_lines_resumable(
     url: str,
     start_byte: int = 0,
     chunk_size: int = 1 << 20,
     timeout: int = 60,
     max_retries: int = 8,
-) -> Iterator[tuple[int, dict]]:
-    """Like `_stream_jsonl_from_byte`, but transparently reconnects (via a
+) -> Iterator[tuple[int, bytes]]:
+    """Like `_stream_lines_from_byte`, but transparently reconnects (via a
     fresh Range request from the last safely-processed line) on a transient
     network error, instead of crashing a long-running full-file scan.
     """
@@ -73,8 +79,8 @@ def iter_jsonl_resumable(
     retries = 0
     while True:
         try:
-            for next_offset, obj in _stream_jsonl_from_byte(url, offset, chunk_size, timeout):
-                yield next_offset, obj
+            for next_offset, line in _stream_lines_from_byte(url, offset, chunk_size, timeout):
+                yield next_offset, line
                 offset = next_offset
                 retries = 0  # reset backoff after any successful progress
             return
@@ -86,3 +92,12 @@ def iter_jsonl_resumable(
             print(f"\nNetwork error ({exc}); reconnecting at byte {offset:,} in {wait}s "
                   f"(retry {retries}/{max_retries})...")
             time.sleep(wait)
+
+
+def iter_jsonl_resumable(url: str, start_byte: int = 0, **kwargs) -> Iterator[tuple[int, dict]]:
+    """Convenience wrapper for callers that trust every line to be valid
+    JSON (fetch_reviews.py -- the reviews file has shown a consistent
+    schema). A bad line here raises, same as before.
+    """
+    for offset, line in iter_lines_resumable(url, start_byte=start_byte, **kwargs):
+        yield offset, json.loads(line)

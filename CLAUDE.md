@@ -170,3 +170,31 @@ Format: **Decision** — Rejected alternative(s) — Why.
     recorded after a line has been fully parsed and processed — never a
     raw mid-scan byte count. Resuming re-issues a `Range` request at
     exactly that offset, which is always a line boundary.
+
+17. **`ingest_metadata.py` dropped `datasets` streaming entirely, moving to
+    the same raw-JSONL-over-HTTP reader as `fetch_reviews.py`
+    (`src/http_jsonl.py`), with its own per-line `json.loads` and
+    `.get()`-based field access, plus the same byte-offset
+    checkpoint/resume as #16.** — *Rejected:* keeping `datasets` streaming
+    for metadata (it was only reworked for reviews). — *Why:* it crashed in
+    production, not just in theory. `datasets` infers an Arrow schema from
+    the first batch of streamed rows; around row 319K, later metadata rows
+    introduce extra columns (`subtitle`, `author`) and represent `price` as
+    a string instead of a float, and the library raised a `CastError`
+    trying to force those rows into the earlier schema. The 50K-row test
+    run earlier never reached row 319K, so this didn't surface until a
+    longer run. Parsing each line as an independent Python dict has no
+    shared schema to violate, so this class of error is now structurally
+    impossible, not just handled — confirmed by running past row 319K
+    (400K+ rows) without incident. Two more defensive changes that fall out
+    of the same fix:
+    - `parse_price()` strips non-numeric characters and returns `None`
+      (rather than raising) on anything that doesn't reduce to a single
+      number; `unparseable_price_count` in the funnel tracks how often
+      this happens (e.g. a genuine range like `"$19.99 - $29.99"`).
+    - A line that fails `json.loads` is counted (`invalid_json_lines` in
+      the funnel) and skipped, not allowed to crash the run.
+    **Side effect:** `datasets` and its transitive dependency tree
+    (pyarrow, pandas, huggingface_hub, aiohttp, ...) are no longer used
+    anywhere in the codebase and were removed; `requirements.txt` dropped
+    from 38 pinned packages to 11.

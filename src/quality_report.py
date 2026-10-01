@@ -38,6 +38,8 @@ def main() -> None:
         lines.append("- Excluded as accessories/parts, by category (strong/weak tier):")
         for cat, tiers in metadata_funnel.get("excluded_by_category_and_tier", {}).items():
             lines.append(f"  - {cat}: strong={tiers.get('strong', 0):,}, weak={tiers.get('weak', 0):,}")
+        lines.append(f"- Rows that failed to parse as JSON (skipped, not crashed): {metadata_funnel.get('invalid_json_lines', 0):,}")
+        lines.append(f"- Candidate rows with an unparseable price (kept, price=NULL): {metadata_funnel.get('unparseable_price_count', 0):,}")
         lines.append("- Final candidates shown to user, by category:")
         for cat, n in metadata_funnel.get("final_candidates_by_category", {}).items():
             lines.append(f"  - {cat}: {n:,}")

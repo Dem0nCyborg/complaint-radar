@@ -19,6 +19,7 @@ CONFIG_DIR = ROOT_DIR / "config"
 CANDIDATE_CSV_PATH = INTERIM_DIR / "candidate_products.csv"
 EXCLUDED_PRODUCTS_CSV_PATH = INTERIM_DIR / "excluded_products.csv"
 METADATA_FUNNEL_PATH = INTERIM_DIR / "metadata_funnel.json"
+METADATA_CHECKPOINT_PATH = INTERIM_DIR / "ingest_metadata_checkpoint.json"
 
 RAW_REVIEWS_PATH = RAW_DIR / "reviews_raw.jsonl"
 FETCH_CHECKPOINT_PATH = RAW_DIR / "fetch_checkpoint.json"
@@ -33,10 +34,14 @@ CATEGORIES_YAML_PATH = CONFIG_DIR / "categories.yaml"
 DATA_QUALITY_REPORT_PATH = REPORTS_DIR / "data_quality_report.md"
 
 # --- dataset source ------------------------------------------------------
-# Loaded directly as raw JSONL over HTTP (streaming=True) rather than via the
-# dataset's own loading script: `datasets>=5` no longer executes loading
-# scripts, and McAuley-Lab/Amazon-Reviews-2023 ships one. Hitting the raw
-# per-category JSONL files directly works fine and streams identically.
+# Both the metadata and review files are read directly as raw JSONL over
+# HTTP (src/http_jsonl.py: json.loads per line, fields read with .get()),
+# not through the `datasets` library at all. Originally just a workaround
+# for `datasets>=5` no longer executing the loading script this dataset repo
+# ships -- but metadata ingestion specifically needed this regardless, once
+# `datasets`' own streaming+Arrow-cast path crashed around row 319K on rows
+# with a different schema (extra columns, price as a string). See CLAUDE.md
+# #17 for the full story.
 
 _HF_RESOLVE_BASE = "https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/resolve/main"
 META_JSONL_URL = f"{_HF_RESOLVE_BASE}/raw/meta_categories/meta_Home_and_Kitchen.jsonl"
@@ -205,7 +210,7 @@ def normalize_brand(raw_brand: str | None, category: str) -> str:
 
 # --- fetch / sampling parameters -------------------------------------------
 
-FETCH_CHECKPOINT_INTERVAL = 2000  # examples scanned between checkpoint writes
+CHECKPOINT_INTERVAL = 2000  # rows scanned between checkpoint writes (ingest_metadata.py and fetch_reviews.py)
 
 SAMPLE_SIZE = 4000
 SAMPLE_SEED = 42
