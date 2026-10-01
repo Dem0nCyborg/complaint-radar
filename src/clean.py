@@ -1,4 +1,14 @@
-"""Phase 1, step 3: dedupe, drop empty text, flag (not drop) non-English.
+"""Phase 1, step 3: dedupe (two passes), drop empty text, flag (not drop)
+non-English.
+
+Two separate dedupe passes, counted separately:
+1. Same-listing exact duplicate: identical (user_id, parent_asin,
+   timestamp, text) -- review_id collision.
+2. Cross-listing duplicate: identical (user_id, timestamp, text) but a
+   DIFFERENT parent_asin -- Amazon shares one review pool across duplicate/
+   cross-listed parent_asins for what's effectively the same product
+   listing, so the same review can be fetched once per matching selected
+   parent_asin. See CLAUDE.md for why this needed a second pass.
 
 Reads data/raw/reviews_raw.jsonl, writes cleaned rows to
 data/interim/reviews_clean.jsonl plus drop-count stats for the quality
@@ -43,8 +53,10 @@ def main() -> None:
     raw_count = 0
     empty_dropped = 0
     duplicate_dropped = 0
+    cross_listing_duplicate_dropped = 0
     non_english_flagged = 0
     seen_ids: set[str] = set()
+    seen_cross_listing_keys: set[tuple] = set()
     cleaned_rows = []
 
     with open(config.RAW_REVIEWS_PATH, encoding="utf-8") as f:
@@ -71,6 +83,19 @@ def main() -> None:
             duplicate_dropped += 1
             continue
         seen_ids.add(review_id)
+
+        # Amazon shares one review pool across duplicate/cross-listed parent_asins
+        # (e.g. the same physical product re-listed under several parent_asins) --
+        # the same review can show up attached to more than one of our SELECTED
+        # products. review_id includes parent_asin, so that pass alone doesn't
+        # catch this; this second key deliberately omits parent_asin. First
+        # occurrence (file/scan order) is kept, later cross-listing copies are
+        # dropped and counted separately from same-listing exact duplicates.
+        cross_listing_key = (user_id, timestamp, text)
+        if cross_listing_key in seen_cross_listing_keys:
+            cross_listing_duplicate_dropped += 1
+            continue
+        seen_cross_listing_keys.add(cross_listing_key)
 
         likely_english = is_english(text)
         if not likely_english:
@@ -100,6 +125,7 @@ def main() -> None:
         "raw_count": raw_count,
         "empty_text_dropped": empty_dropped,
         "duplicate_dropped": duplicate_dropped,
+        "cross_listing_duplicate_dropped": cross_listing_duplicate_dropped,
         "non_english_flagged": non_english_flagged,
         "final_count": len(cleaned_rows),
     }

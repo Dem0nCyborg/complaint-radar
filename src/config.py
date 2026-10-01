@@ -28,6 +28,8 @@ FETCH_STATS_PATH = INTERIM_DIR / "fetch_stats.json"
 CLEAN_REVIEWS_PATH = INTERIM_DIR / "reviews_clean.jsonl"
 CLEAN_STATS_PATH = INTERIM_DIR / "clean_stats.json"
 
+SELECT_SAMPLE_STATS_PATH = INTERIM_DIR / "select_sample_stats.json"
+
 DUCKDB_PATH = PROCESSED_DIR / "complaint_radar.duckdb"
 CATEGORIES_YAML_PATH = CONFIG_DIR / "categories.yaml"
 

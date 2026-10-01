@@ -26,6 +26,7 @@ def main() -> None:
     metadata_funnel = read_json(config.METADATA_FUNNEL_PATH, {})
     fetch_stats = read_json(config.FETCH_STATS_PATH, {})
     clean_stats = read_json(config.CLEAN_STATS_PATH, {})
+    select_sample_stats = read_json(config.SELECT_SAMPLE_STATS_PATH, {})
 
     lines = ["# ComplaintRadar — Phase 1 Data Quality Report", ""]
 
@@ -63,7 +64,9 @@ def main() -> None:
     if clean_stats:
         lines.append(f"- Raw reviews in: {clean_stats.get('raw_count', 0):,}")
         lines.append(f"- Dropped (empty text): {clean_stats.get('empty_text_dropped', 0):,}")
-        lines.append(f"- Dropped (duplicate): {clean_stats.get('duplicate_dropped', 0):,}")
+        lines.append(f"- Dropped (same-listing duplicate): {clean_stats.get('duplicate_dropped', 0):,}")
+        lines.append(f"- Dropped (cross-listing duplicate -- same review, different parent_asin): "
+                      f"{clean_stats.get('cross_listing_duplicate_dropped', 0):,}")
         lines.append(f"- Flagged non-English (kept, not dropped): {clean_stats.get('non_english_flagged', 0):,}")
         lines.append(f"- Final cleaned count: {clean_stats.get('final_count', 0):,}")
     else:
@@ -84,6 +87,17 @@ def main() -> None:
         lines.append(f"- Products loaded: {n_products}")
         lines.append(f"- Reviews loaded (full set, feeds trend analysis): {n_reviews:,}")
         lines.append(f"- Reviews flagged in_sample (feeds LLM extraction, seed={config.SAMPLE_SEED}): {n_in_sample:,}")
+        if select_sample_stats:
+            lines.append(f"  - Stratified by product: target {select_sample_stats.get('target_total', 0):,}, "
+                          f"base allocation {select_sample_stats.get('base_allocation_per_product', 0)}/product, "
+                          f"English-only pool per product (see CLAUDE.md).")
+            for parent_asin, info in select_sample_stats.get("by_product", {}).items():
+                shortfall_note = f" -- SHORTFALL {info['shortfall']}" if info.get("shortfall") else ""
+                lines.append(f"    - {parent_asin}: allocated={info['allocated']} "
+                              f"english_pool={info['english_pool_size']} taken={info['taken']}{shortfall_note}")
+            if select_sample_stats.get("total_shortfall", 0) > 0:
+                lines.append(f"  - **Total shortfall vs. target: {select_sample_stats['total_shortfall']:,}** "
+                              "(under-supplied products were not topped up from others).")
         lines.append(f"- Hand-labeling sample size (seed={config.LABEL_SAMPLE_SEED}): {n_label_sample}")
         for stratum, n in strata:
             lines.append(f"  - {stratum}: {n}")

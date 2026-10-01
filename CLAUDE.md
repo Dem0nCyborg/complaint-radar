@@ -198,3 +198,39 @@ Format: **Decision** — Rejected alternative(s) — Why.
     (pyarrow, pandas, huggingface_hub, aiohttp, ...) are no longer used
     anywhere in the codebase and were removed; `requirements.txt` dropped
     from 38 pinned packages to 11.
+
+18. **`clean.py` runs a second, separate dedupe pass on
+    `(user_id, timestamp, text)` WITHOUT `parent_asin`, counted separately
+    as `cross_listing_duplicate_dropped`.** — *Rejected:* relying on the
+    existing `review_id`-based dedupe alone. — *Why:* Amazon shares one
+    review pool across duplicate/cross-listed parent_asins for what's
+    effectively the same product listing (e.g. the NutriBullet NBR-1201 is
+    listed under several different `parent_asin`s that all draw from the
+    same reviews). Since `review_id` is hashed from
+    `user_id|parent_asin|timestamp|text`, the same physical review fetched
+    under two different selected `parent_asin`s produces two different
+    `review_id`s and survives the first dedupe pass as if they were two
+    independent reviews — which would double-count that customer's
+    experience in any per-product or per-brand analysis. The first
+    occurrence in scan order is kept; later cross-listing copies are
+    dropped.
+
+19. **`select_sample.py` changed from pure random sampling across the
+    pooled review set to sampling stratified by product**: the 4,000-review
+    target is split as evenly as possible across the selected products
+    (`target // n_products` per product, remainder distributed to the first
+    few products in sorted `parent_asin` order), drawn only from each
+    product's English-flagged reviews, same fixed seed. — *Rejected:* pure
+    random sampling across the pooled set (the original design). — *Why:*
+    pure random sampling would let whichever product has the most raw
+    reviews dominate the LLM-extraction sample -- a product with 10x the
+    review volume isn't necessarily 10x as complaint-prone, but it would
+    look that way if it also supplied 10x the sampled rows, making any
+    later per-product/per-brand complaint-rate comparison unreliable.
+    **Behavior when a product's English review pool is smaller than its
+    allocation:** every one of its English reviews is taken and the gap is
+    reported as a shortfall in `data/interim/select_sample_stats.json` and
+    the quality report -- the shortfall is NOT redistributed to other
+    products, so the total sample can land below 4,000 when supply is
+    short rather than silently over-representing a different product to
+    compensate.
