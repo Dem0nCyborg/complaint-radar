@@ -243,6 +243,21 @@ CHECKPOINT_INTERVAL = 2000  # rows scanned between checkpoint writes (ingest_met
 SAMPLE_SIZE = 4000
 SAMPLE_SEED = 42
 
+# Sampling (select_sample.py and, through it, sample_for_labeling.py) is
+# restricted to this common time window. Product histories start anywhere
+# from 2012 to late 2020, so without a shared window the sample would mix
+# products with 10+ years of review history against ones with 1-2 -- not a
+# fair basis for comparison. Early reviews under a listing can also be
+# carried over from an earlier model generation it replaced (see CLAUDE.md),
+# which is worse signal than a review of the actual listed product. The
+# window ends before 2023-Q3 because that quarter is partial: the dataset's
+# review data ends mid-September 2023. End is exclusive (first moment of the
+# day after SAMPLE_WINDOW_END_DATE) so the whole last day is included
+# regardless of time-of-day.
+SAMPLE_WINDOW_START_DATE = "2021-01-01"
+SAMPLE_WINDOW_END_DATE = "2023-06-30"
+SAMPLE_WINDOW_END_EXCLUSIVE = "2023-07-01"
+
 LABEL_SAMPLE_SIZE = 150
 LABEL_SAMPLE_SEED = 7
 LABEL_SAMPLE_LOW_STAR_FRACTION = 0.5  # target share of the sample that is 1-3 star

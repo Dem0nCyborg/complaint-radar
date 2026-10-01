@@ -18,8 +18,13 @@ product with 10x the raw review volume isn't necessarily 10x as complaint-
 prone, but it would look that way if it also supplied 10x the sampled rows.
 See CLAUDE.md.
 
-If a product has fewer English reviews than its allocation, every one of
-its English reviews is taken and the gap is reported as a shortfall --
+Also restricted to a common date window (config.SAMPLE_WINDOW_START_DATE
+through config.SAMPLE_WINDOW_END_DATE inclusive) -- see CLAUDE.md for why.
+This only affects what gets sampled/labeled; the full `reviews` table keeps
+every review regardless of date, for trend analysis.
+
+If a product has fewer English, in-window reviews than its allocation,
+every one of them is taken and the gap is reported as a shortfall --
 allocation is NOT silently redistributed to other products, so the total
 sample can land below config.SAMPLE_SIZE when supply is short.
 
@@ -66,8 +71,14 @@ def main() -> None:
         allocation = base_allocation + (1 if i < remainder else 0)
         pool = sorted(
             row[0] for row in con.execute(
-                "SELECT review_id FROM reviews WHERE parent_asin = ? AND is_likely_english = TRUE",
-                [parent_asin],
+                """
+                SELECT review_id FROM reviews
+                WHERE parent_asin = ?
+                  AND is_likely_english = TRUE
+                  AND review_timestamp >= ?
+                  AND review_timestamp < ?
+                """,
+                [parent_asin, config.SAMPLE_WINDOW_START_DATE, config.SAMPLE_WINDOW_END_EXCLUSIVE],
             ).fetchall()
         )
         taken = rng.sample(pool, min(allocation, len(pool)))
@@ -81,7 +92,7 @@ def main() -> None:
 
         by_product[parent_asin] = {
             "allocated": allocation,
-            "english_pool_size": len(pool),
+            "in_window_pool_size": len(pool),
             "taken": len(taken),
             "shortfall": shortfall,
         }
@@ -105,7 +116,7 @@ def main() -> None:
           f"base allocation {base_allocation}/product).")
     for parent_asin, info in by_product.items():
         flag = "  <-- SHORTFALL" if info["shortfall"] else ""
-        print(f"  {parent_asin}: allocated={info['allocated']} english_pool={info['english_pool_size']} "
+        print(f"  {parent_asin}: allocated={info['allocated']} in_window_pool={info['in_window_pool_size']} "
               f"taken={info['taken']}{flag}")
     if stats["total_shortfall"] > 0:
         print(f"\nTotal shortfall: {stats['total_shortfall']:,} short of the {config.SAMPLE_SIZE:,} target "

@@ -92,11 +92,12 @@ def main() -> None:
         if select_sample_stats:
             lines.append(f"  - Stratified by product: target {select_sample_stats.get('target_total', 0):,}, "
                           f"base allocation {select_sample_stats.get('base_allocation_per_product', 0)}/product, "
-                          f"English-only pool per product (see CLAUDE.md).")
+                          f"English-only, dated {config.SAMPLE_WINDOW_START_DATE} to "
+                          f"{config.SAMPLE_WINDOW_END_DATE} (see CLAUDE.md).")
             for parent_asin, info in select_sample_stats.get("by_product", {}).items():
                 shortfall_note = f" -- SHORTFALL {info['shortfall']}" if info.get("shortfall") else ""
                 lines.append(f"    - {parent_asin}: allocated={info['allocated']} "
-                              f"english_pool={info['english_pool_size']} taken={info['taken']}{shortfall_note}")
+                              f"in_window_pool={info['in_window_pool_size']} taken={info['taken']}{shortfall_note}")
             if select_sample_stats.get("total_shortfall", 0) > 0:
                 lines.append(f"  - **Total shortfall vs. target: {select_sample_stats['total_shortfall']:,}** "
                               "(under-supplied products were not topped up from others).")

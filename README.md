@@ -129,6 +129,16 @@ Output: `data/processed/complaint_radar.duckdb` and
   duplicate listings. It is not a reliable count of how many reviews a
   fetch will find for one specific `parent_asin`, as the NutriBullet case
   shows.
+- Reviews filed under one listing can include reviews carried over from an
+  earlier model generation that listing replaced. This is a known
+  characteristic of Amazon's review system, not specific to one product
+  here. It's part of why the sample for labeling and LLM extraction is
+  restricted to a common analysis window: 2021-Q1 through 2023-Q2.
+- The sample used for hand labeling and LLM extraction only includes
+  reviews dated 2021-01-01 through 2023-06-30. The full 89,838-row cleaned
+  dataset in DuckDB is not date-restricted and covers each product's
+  complete history; the window restriction applies only to what gets
+  sampled, not to what's stored. See `CLAUDE.md` #21.
 - The complaint taxonomy is single-label: one complaint category per
   review, not multiple. See `CLAUDE.md` #2 for why.
 - The complaint categories in `config/categories.yaml` are still a draft.

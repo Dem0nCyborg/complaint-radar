@@ -263,3 +263,26 @@ Format: **Decision** — Rejected alternative(s) — Why.
     `select_sample.py` needed no change — it already derives its per-product
     allocation from whatever `parent_asin`s are actually present in the
     loaded `reviews` table.
+
+21. **`select_sample.py` (and, through `in_sample`, `sample_for_labeling.py`)
+    is restricted to a common date window: 2021-01-01 through 2023-06-30
+    inclusive** (`config.SAMPLE_WINDOW_START_DATE` /
+    `_END_DATE` / `_END_EXCLUSIVE`). — *Rejected:* sampling from each
+    product's full history regardless of date (the original design). —
+    *Why:* the 17 products' histories start anywhere from 2012 to late
+    2020 — sampling from full history would mix a product with 10+ years
+    of reviews against one with 1-2, which isn't a fair basis for
+    per-product/per-brand comparison. Reviews filed under one listing can
+    also include reviews carried over from an earlier model generation
+    that listing replaced, which is a different (and worse) signal than a
+    review of the actual listed product — a shared recent window reduces
+    how much of that older, possibly-mismatched history gets sampled. The
+    window ends before 2023-Q3 because that quarter is partial: the
+    dataset's review data ends mid-September 2023, so a full quarter isn't
+    available to compare against. **This only changes what gets
+    sampled/labeled** — the full `reviews` table still holds all 89,838
+    cleaned rows regardless of date, for trend analysis. Re-ran with this
+    restriction: all 17 products still filled their full per-product
+    allocation from inside the window (smallest pool: B0CDSLV93R/Ninja
+    BN401 at 598 in-window English reviews against an allocation of 235) —
+    no shortfall, so no change to the total 4,000/150 sample sizes.

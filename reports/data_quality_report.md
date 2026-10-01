@@ -54,25 +54,27 @@
 - Products loaded: 17
 - Reviews loaded (full set, feeds trend analysis): 89,838
 - Reviews flagged in_sample (feeds LLM extraction, seed=42): 4,000
-  - Stratified by product: target 4,000, base allocation 235/product, English-only pool per product (see CLAUDE.md).
-    - B00NGV4506: allocated=236 english_pool=6280 taken=236
-    - B07DL4QY5V: allocated=236 english_pool=6312 taken=236
-    - B07FDJMC9Q: allocated=236 english_pool=5434 taken=236
-    - B09TR3DQ8R: allocated=236 english_pool=5000 taken=236
-    - B09YZ931H2: allocated=236 english_pool=2065 taken=236
-    - B0BCL798D9: allocated=235 english_pool=2706 taken=235
-    - B0BJCDKNT2: allocated=235 english_pool=1600 taken=235
-    - B0BLL3SCXK: allocated=235 english_pool=5157 taken=235
-    - B0BLZKZ5P5: allocated=235 english_pool=1556 taken=235
-    - B0BMWSG9RR: allocated=235 english_pool=1955 taken=235
-    - B0BQLF2WMN: allocated=235 english_pool=9497 taken=235
-    - B0BTPR8Q2Q: allocated=235 english_pool=2183 taken=235
-    - B0BYRM8PXH: allocated=235 english_pool=18495 taken=235
-    - B0BZT7SWZB: allocated=235 english_pool=3427 taken=235
-    - B0C2ZMCN8T: allocated=235 english_pool=6376 taken=235
-    - B0CBT1F9QJ: allocated=235 english_pool=5860 taken=235
-    - B0CDSLV93R: allocated=235 english_pool=664 taken=235
-- Hand-labeling sample size (seed=7): 0
+  - Stratified by product: target 4,000, base allocation 235/product, English-only, dated 2021-01-01 to 2023-06-30 (see CLAUDE.md).
+    - B00NGV4506: allocated=236 in_window_pool=1739 taken=236
+    - B07DL4QY5V: allocated=236 in_window_pool=1645 taken=236
+    - B07FDJMC9Q: allocated=236 in_window_pool=2336 taken=236
+    - B09TR3DQ8R: allocated=236 in_window_pool=1174 taken=236
+    - B09YZ931H2: allocated=236 in_window_pool=1854 taken=236
+    - B0BCL798D9: allocated=235 in_window_pool=1003 taken=235
+    - B0BJCDKNT2: allocated=235 in_window_pool=1511 taken=235
+    - B0BLL3SCXK: allocated=235 in_window_pool=2804 taken=235
+    - B0BLZKZ5P5: allocated=235 in_window_pool=969 taken=235
+    - B0BMWSG9RR: allocated=235 in_window_pool=1942 taken=235
+    - B0BQLF2WMN: allocated=235 in_window_pool=4049 taken=235
+    - B0BTPR8Q2Q: allocated=235 in_window_pool=1934 taken=235
+    - B0BYRM8PXH: allocated=235 in_window_pool=6507 taken=235
+    - B0BZT7SWZB: allocated=235 in_window_pool=3220 taken=235
+    - B0C2ZMCN8T: allocated=235 in_window_pool=4722 taken=235
+    - B0CBT1F9QJ: allocated=235 in_window_pool=1231 taken=235
+    - B0CDSLV93R: allocated=235 in_window_pool=598 taken=235
+- Hand-labeling sample size (seed=7): 150
+  - high_4_5: 75
+  - low_1_3: 75
 - Reviews hand-labeled so far: 0
 
 **Reading caveat:** the hand-labeling sample is stratified ~50% 1-3 star / ~50% 4-5 star, not the natural rating distribution. Any accuracy/precision number computed against it reflects a complaint-enriched mix and needs reweighting before it generalizes to the full review population.
