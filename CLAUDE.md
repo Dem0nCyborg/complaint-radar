@@ -286,3 +286,51 @@ Format: **Decision** — Rejected alternative(s) — Why.
     allocation from inside the window (smallest pool: B0CDSLV93R/Ninja
     BN401 at 598 in-window English reviews against an allocation of 235) —
     no shortfall, so no change to the total 4,000/150 sample sizes.
+
+## Phase 2: reference labels, extraction, agreement
+
+22. **Hand labeling dropped entirely. Reference labels for the 150-review
+    `label_sample` are AI-generated**, by Claude in a separate chat session
+    (given `data/interim/label_sample_export.csv` as input, a CSV export
+    with no DB access), brought back as `data/interim/reference_labels.csv`
+    and imported via `src/import_reference_labels.py` with
+    `labeler = "claude-chat-reference"`. — *Rejected:* calling a model API
+    (Anthropic or otherwise) directly from this repo to generate reference
+    labels; the original plan of a human hand-labeling the 150-review
+    sample. — *Why:* no API access was set up for this purpose at the time,
+    and hand-labeling was dropped as a project decision (not a technical
+    limitation). **This means the resulting evaluation is explicitly
+    model-to-model agreement (a cheap extraction model vs. a stronger
+    model's judgment), not agreement with a human-verified gold standard.**
+    This must be stated that way everywhere it's described — README, this
+    log, any chart or brief — and these labels are never called "human" or
+    "hand" labels.
+
+23. **`config/categories.yaml` finalized** by reading 150 real English
+    `in_sample` reviews (half 1-3★, half 4-5★, excluding `label_sample`
+    itself; fixed seed=99, ids in
+    `data/interim/taxonomy_reading_sample_ids.json`). Final taxonomy: 9
+    categories (`durability_defect`, `performance`, `connectivity_app`,
+    `noise`, `design_usability`, `safety`, `customer_service`,
+    `shipping_packaging`, `price_value`) plus `no_complaint` and `other`,
+    each with a one-line definition, plus a primary-complaint rule (the
+    complaint that ended or most limited use of the product) and an
+    explicit tie-breaker precedence for when more than one category seems
+    to apply. — *Rejected:* the original placeholder list, which only had
+    `performance` to cover every functional complaint. — *Why:* reading
+    real reviews showed noise, connectivity/app failures, and
+    design/usability issues are frequent, distinct complaint types that a
+    single `performance` bucket would blur together — collapsing them
+    would make per-category complaint rates less useful for the dashboard
+    and brief.
+
+24. **`labels` table schema: dropped `is_defect`, added `labeler`.** —
+    *Rejected:* keeping `is_defect` as a separate boolean. — *Why:*
+    `is_defect` was redundant with `complaint_category` + `severity` (a
+    defect is identifiable from the category itself, e.g.
+    `durability_defect`); `labeler` is needed because label sources now
+    genuinely differ (`claude-chat-reference` for the reference set,
+    `manual` if `label_tool.py` is ever used for spot-checking). Migrated
+    the existing (empty) `labels` table in place with `ALTER TABLE`;
+    `src/load_duckdb.py`'s `CREATE TABLE` reflects the new schema for any
+    future fresh database.

@@ -48,12 +48,16 @@ CREATE TABLE IF NOT EXISTS label_sample (
     sampled_at  TIMESTAMP
 );
 
+-- labeler identifies the source of a label (e.g. "claude-chat-reference"),
+-- since reference labels here are LLM-generated, not from a human annotator.
+-- is_defect was dropped: complaint_category + severity already capture
+-- what is_defect was meant to, without a separate redundant flag.
 CREATE TABLE IF NOT EXISTS labels (
     review_id           TEXT PRIMARY KEY REFERENCES reviews(review_id),
     complaint_category  TEXT,
     severity            INTEGER,
-    is_defect           BOOLEAN,
     note                TEXT,
+    labeler             TEXT,
     labeled_at          TIMESTAMP
 );
 """

@@ -1,7 +1,12 @@
-"""Phase 1, step 7: minimal CLI for hand-labeling the 150-review sample.
+"""Minimal CLI for manually labeling reviews from the 150-review
+label_sample. NOT the project's reference-label source: those are
+generated outside this repo (Claude, in a chat session) and imported via
+src/import_reference_labels.py with labeler="claude-chat-reference". This
+tool remains available for optional manual spot-checking, writing
+labeler="manual" if used.
 
 Fields collected: complaint_category (from config/categories.yaml),
-severity (1-3), is_defect. Nothing is pre-filled or suggested.
+severity (1-3). Nothing is pre-filled or suggested.
 
 Usage:
     python -m src.label_tool              # label the next unlabeled review
@@ -61,16 +66,6 @@ def prompt_severity(severity_def: dict, rules: list[str]) -> int:
         if choice in ("1", "2", "3"):
             return int(choice)
         print("Enter 1, 2, or 3.")
-
-
-def prompt_is_defect() -> bool:
-    while True:
-        choice = input("\nIs this a product defect? (y/n) > ").strip().lower()
-        if choice in ("y", "yes"):
-            return True
-        if choice in ("n", "no"):
-            return False
-        print("Enter y or n.")
 
 
 def run_browse(con: duckdb.DuckDBPyConnection, n: int) -> None:
@@ -139,7 +134,6 @@ def run_label(con: duckdb.DuckDBPyConnection, taxonomy: dict) -> None:
 
         note = None
         severity = None
-        is_defect = None
 
         if category == "no_complaint":
             pass
@@ -147,14 +141,13 @@ def run_label(con: duckdb.DuckDBPyConnection, taxonomy: dict) -> None:
             if category == "other":
                 note = input("Short free-text note for 'other': ").strip()
             severity = prompt_severity(severity_def, rules)
-            is_defect = prompt_is_defect()
 
         con.execute(
             """
-            INSERT INTO labels (review_id, complaint_category, severity, is_defect, note, labeled_at)
+            INSERT INTO labels (review_id, complaint_category, severity, note, labeler, labeled_at)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (review_id, category, severity, is_defect, note, datetime.now(timezone.utc)),
+            (review_id, category, severity, note, "manual", datetime.now(timezone.utc)),
         )
 
 

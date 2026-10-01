@@ -1,30 +1,84 @@
 # Shared complaint taxonomy + severity rubric.
 #
-# Used by src/label_tool.py today, and intended to be reused verbatim in the
-# Phase 2 LLM extraction prompt so human labels and LLM output are measured
-# against the exact same definitions.
+# Used by the reference-label CSV (data/interim/reference_labels.csv,
+# imported by src/import_reference_labels.py) and by the extraction prompt
+# (src/extract.py), so both are measured against the exact same definitions.
 #
-# PLACEHOLDER: this category list was drafted before reading real reviews.
-# Finalize it after running `python -m src.label_tool --browse` (see README)
-# and before starting the real 150-review labeling pass.
+# Finalized by reading 150 real English in_sample reviews (half 1-3 star,
+# half 4-5 star), drawn from the sample window, excluding the 150-review
+# label_sample itself (sample defined by a fixed seed=99 draw, ids in
+# data/interim/taxonomy_reading_sample_ids.json). See CLAUDE.md.
 
 categories:
   - key: no_complaint
     label: "No complaint"
+    definition: "The review expresses no dissatisfaction with the product itself."
+
   - key: durability_defect
     label: "Durability / defect"
+    definition: "The product broke, stopped working, or a part failed or was defective out of the box (motor died, pitcher/basket cracked, battery failed, coating peeled, blade fell out, wheel seized, etc.)."
+
   - key: performance
     label: "Performance"
+    definition: "The product runs but doesn't do its core job well: poor suction/pickup, incomplete blending (chunks, bubbling), uneven or unsatisfactory cooking results, poor navigation/mapping, missed spots or edges."
+
+  - key: connectivity_app
+    label: "Connectivity / app"
+    definition: "WiFi, mobile app, voice-assistant (Alexa/Google), or mapping/scheduling software fails, disconnects, or won't set up, independent of the device's physical cleaning/cooking/blending performance."
+
+  - key: noise
+    label: "Noise"
+    definition: "The product is louder than expected or desired. Use this only when loudness itself is the complaint, not as a side note in a review whose main complaint is something else."
+
+  - key: design_usability
+    label: "Design / usability"
+    definition: "The product works and nothing is broken, but a design choice makes it unpleasant or hard to use: confusing controls, coarse settings, poor manual/instructions, awkward shape, leaks from normal assembly, inconvenient cleaning."
+
   - key: safety
     label: "Safety"
+    definition: "A hazard beyond normal wear: fire/explosion, burning or chemical/toxic smell, electrical fault, or injury risk."
+
   - key: customer_service
     label: "Customer service"
+    definition: "The complaint is about the support, warranty, return, or replacement experience, not a product defect being described for its own sake. If a defect is described AND the complaint is really about how support handled it, see the tie-breaker rule below."
+
   - key: shipping_packaging
     label: "Shipping / packaging"
+    definition: "The complaint is about the condition of the box/packaging on arrival, or receiving a used/damaged/wrong item, not about the product's function once in use."
+
   - key: price_value
     label: "Price / value"
+    definition: "The complaint is that the product isn't worth what it cost, with no functional or quality complaint driving that view."
+
   - key: other
     label: "Other (free-text note)"
+    definition: "A real complaint that doesn't fit any category above. Always paired with a short free-text note."
+
+# Primary-complaint rule: a review may mention several issues. Assign the
+# category for the complaint that ENDED USE of the product (it broke, was
+# returned, was replaced) or, if nothing ended use, the complaint that MOST
+# LIMITED its use (made it meaningfully less useful day to day). A complaint
+# mentioned only in passing, with no effect on use, is not the primary
+# complaint.
+#
+# Tie-breakers, applied in order, only when the primary-complaint rule above
+# still leaves more than one category equally plausible:
+# 1. A genuine safety hazard (fire, shock, toxic fumes) always wins, even if
+#    the product also simply stopped working -- category: safety.
+# 2. A product that broke/failed wins over an annoyance that was also
+#    present (noise, design) -- category: durability_defect.
+# 3. If the complaint is about customer service's response to a real
+#    defect, and the review spends most of its length on the service
+#    experience (slow replies, refusal to help, no parts available) rather
+#    than describing the defect itself, use customer_service. If the
+#    defect itself is the focus and support is mentioned only briefly, use
+#    durability_defect.
+# 4. A connectivity/app failure wins over a generic performance complaint
+#    only when the device's physical job (cleaning/cooking/blending) is
+#    explicitly described as otherwise fine.
+# 5. If still tied, use this fallback precedence (highest first): safety,
+#    durability_defect, connectivity_app, performance, design_usability,
+#    noise, customer_service, shipping_packaging, price_value, other.
 
 severity:
   1:
@@ -40,3 +94,5 @@ severity:
 labeling_rules:
   - "Judge what the review says happened, not how angry the reviewer sounds."
   - "If torn between two severity levels, pick the lower one."
+  - "Apply the primary-complaint rule: pick the complaint that ended or most limited use, not the first one mentioned."
+  - "no_complaint gets no severity (NULL). Every other category gets a severity 1-3."
