@@ -35,31 +35,11 @@ for the real run.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 
 from tqdm import tqdm
 
 from src import config, http_jsonl
-
-
-def load_selected_asins() -> dict[str, str]:
-    """Returns {parent_asin: category} for rows marked selected='y'."""
-    if not config.CANDIDATE_CSV_PATH.exists():
-        raise SystemExit(
-            f"{config.CANDIDATE_CSV_PATH} not found. Run `python -m src.ingest_metadata` first."
-        )
-    selected: dict[str, str] = {}
-    with open(config.CANDIDATE_CSV_PATH, newline="", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            if (row.get("selected") or "").strip().lower() == "y":
-                selected[row["parent_asin"]] = row["category"]
-    if not selected:
-        raise SystemExit(
-            f"No rows marked selected='y' in {config.CANDIDATE_CSV_PATH}. "
-            "Edit that file first, then rerun."
-        )
-    return selected
 
 
 def load_checkpoint() -> dict:
@@ -81,7 +61,7 @@ def main() -> None:
     config.RAW_DIR.mkdir(parents=True, exist_ok=True)
     config.INTERIM_DIR.mkdir(parents=True, exist_ok=True)
 
-    selected_asins = load_selected_asins()
+    selected_asins = config.load_selected_parent_asins()
     print(f"Selected {len(selected_asins)} products: {sorted(selected_asins)}")
 
     checkpoint = (

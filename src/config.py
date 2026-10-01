@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import re
 from pathlib import Path
@@ -208,6 +209,31 @@ def normalize_brand(raw_brand: str | None, category: str) -> str:
         if alias_key in lowered:
             return normalized
     return cleaned if cleaned.isupper() and len(cleaned) <= 5 else cleaned.title()
+
+
+# --- selection -------------------------------------------------------------
+
+
+def load_selected_parent_asins() -> set[str]:
+    """The single source of truth for "which products are in the pipeline
+    right now": the `selected` column in the candidate CSV. Shared by
+    fetch_reviews.py, clean.py, and load_duckdb.py so that deselecting a
+    product there (e.g. dropping a mislabeled/duplicate-listing product
+    after fetch already ran) takes effect at every later stage without
+    needing to re-fetch -- see CLAUDE.md on dropping B00AIHD94Y.
+    """
+    if not CANDIDATE_CSV_PATH.exists():
+        raise SystemExit(f"{CANDIDATE_CSV_PATH} not found. Run `python -m src.ingest_metadata` first.")
+    selected = set()
+    with open(CANDIDATE_CSV_PATH, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            if (row.get("selected") or "").strip().lower() == "y":
+                selected.add(row["parent_asin"])
+    if not selected:
+        raise SystemExit(
+            f"No rows marked selected='y' in {CANDIDATE_CSV_PATH}. Edit that file first, then rerun."
+        )
+    return selected
 
 
 # --- fetch / sampling parameters -------------------------------------------

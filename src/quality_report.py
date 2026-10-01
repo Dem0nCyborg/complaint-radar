@@ -8,6 +8,7 @@ Usage:
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 
 import duckdb
 
@@ -63,6 +64,7 @@ def main() -> None:
     lines.append("## 3. Cleaning")
     if clean_stats:
         lines.append(f"- Raw reviews in: {clean_stats.get('raw_count', 0):,}")
+        lines.append(f"- Dropped (product deselected after fetch): {clean_stats.get('deselected_product_dropped', 0):,}")
         lines.append(f"- Dropped (empty text): {clean_stats.get('empty_text_dropped', 0):,}")
         lines.append(f"- Dropped (same-listing duplicate): {clean_stats.get('duplicate_dropped', 0):,}")
         lines.append(f"- Dropped (cross-listing duplicate -- same review, different parent_asin): "
@@ -109,6 +111,45 @@ def main() -> None:
             "number computed against it reflects a complaint-enriched mix and needs "
             "reweighting before it generalizes to the full review population."
         )
+    else:
+        lines.append("_Not yet run: `python -m src.load_duckdb`_")
+    lines.append("")
+
+    lines.append("## 5. Review date ranges and quarterly volume (for trend chart planning)")
+    if config.DUCKDB_PATH.exists():
+        con = duckdb.connect(str(config.DUCKDB_PATH), read_only=True)
+        date_ranges = con.execute(
+            """
+            SELECT parent_asin, MIN(review_timestamp), MAX(review_timestamp), COUNT(*)
+            FROM reviews GROUP BY parent_asin ORDER BY parent_asin
+            """
+        ).fetchall()
+        quarterly = con.execute(
+            """
+            SELECT parent_asin,
+                   EXTRACT(year FROM review_timestamp)::INT AS yr,
+                   ((EXTRACT(month FROM review_timestamp)::INT - 1) // 3 + 1) AS qtr,
+                   COUNT(*) AS n
+            FROM reviews
+            GROUP BY parent_asin, yr, qtr
+            ORDER BY parent_asin, yr, qtr
+            """
+        ).fetchall()
+        con.close()
+
+        by_product_quarters = defaultdict(list)
+        for parent_asin, yr, qtr, n in quarterly:
+            by_product_quarters[parent_asin].append((yr, qtr, n))
+
+        lines.append("- Earliest / latest review date per product:")
+        for parent_asin, earliest, latest, n in date_ranges:
+            lines.append(f"  - {parent_asin}: {earliest.date()} to {latest.date()} ({n:,} reviews)")
+        lines.append("")
+        lines.append("- Review counts per product per quarter:")
+        for parent_asin, earliest, latest, n in date_ranges:
+            lines.append(f"  - {parent_asin}:")
+            for yr, qtr, qn in by_product_quarters[parent_asin]:
+                lines.append(f"    - {yr}-Q{qtr}: {qn:,}")
     else:
         lines.append("_Not yet run: `python -m src.load_duckdb`_")
 

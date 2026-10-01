@@ -97,7 +97,17 @@ def main() -> None:
     config.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
 
     products = load_selected_products()
-    reviews = load_cleaned_reviews()
+    selected_asins = {p["parent_asin"] for p in products}
+
+    all_reviews = load_cleaned_reviews()
+    # Defensive re-check against the CURRENT selection, independent of
+    # clean.py already having filtered: a review's parent_asin not being in
+    # `products` would otherwise violate the reviews.parent_asin foreign key.
+    reviews = [r for r in all_reviews if r["parent_asin"] in selected_asins]
+    n_skipped = len(all_reviews) - len(reviews)
+    if n_skipped:
+        print(f"Skipping {n_skipped:,} cleaned reviews for no-longer-selected products "
+              f"(not in the current candidate CSV selection).")
 
     con = duckdb.connect(str(config.DUCKDB_PATH))
     con.execute(SCHEMA_SQL)

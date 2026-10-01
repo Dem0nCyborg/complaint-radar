@@ -10,6 +10,12 @@ Two separate dedupe passes, counted separately:
    listing, so the same review can be fetched once per matching selected
    parent_asin. See CLAUDE.md for why this needed a second pass.
 
+Also re-checks every raw row's parent_asin against the CURRENT `selected`
+column (config.load_selected_parent_asins()), not just what was selected
+when fetch_reviews.py ran -- so deselecting a product after fetch (e.g.
+dropping one filed under a duplicate listing, see CLAUDE.md) excludes its
+raw rows here without needing another fetch pass.
+
 Reads data/raw/reviews_raw.jsonl, writes cleaned rows to
 data/interim/reviews_clean.jsonl plus drop-count stats for the quality
 report.
@@ -50,7 +56,10 @@ def main() -> None:
 
     config.INTERIM_DIR.mkdir(parents=True, exist_ok=True)
 
+    selected_asins = config.load_selected_parent_asins()
+
     raw_count = 0
+    deselected_dropped = 0
     empty_dropped = 0
     duplicate_dropped = 0
     cross_listing_duplicate_dropped = 0
@@ -68,6 +77,10 @@ def main() -> None:
             continue
         raw_count += 1
         row = json.loads(line)
+
+        if row.get("parent_asin") not in selected_asins:
+            deselected_dropped += 1
+            continue
 
         text = (row.get("text") or "").strip()
         if not text:
@@ -123,6 +136,7 @@ def main() -> None:
 
     stats = {
         "raw_count": raw_count,
+        "deselected_product_dropped": deselected_dropped,
         "empty_text_dropped": empty_dropped,
         "duplicate_dropped": duplicate_dropped,
         "cross_listing_duplicate_dropped": cross_listing_duplicate_dropped,

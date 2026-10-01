@@ -234,3 +234,32 @@ Format: **Decision** — Rejected alternative(s) — Why.
     products, so the total sample can land below 4,000 when supply is
     short rather than silently over-representing a different product to
     compensate.
+
+20. **Dropped B00AIHD94Y (NutriBullet NBR-1201) from the pipeline** (set
+    `selected = n` after the fetch had already run) — *rejected:* running
+    another full ~31GB fetch pass scoped to recover its reviews under
+    whichever duplicate listing actually holds them. — *Why:* its review
+    pool is filed under a duplicate/cross-listed `parent_asin` we didn't
+    select — the fetch found only 45 raw reviews for it against a
+    `rating_number` of 26,527, a two-orders-of-magnitude gap that's the
+    signature of this problem (see CLAUDE.md #18 on cross-listing). Chased
+    down, it would mean identifying the sibling listing(s) actually holding
+    those reviews and re-running the full reviews scan to catch them too —
+    dropped in favor of progress with the 17 products whose review pools
+    are already correctly attached.
+    **Note for future product selection:** `rating_number` is a *ratings*
+    count that Amazon aggregates across shared/duplicate listings, not a
+    reliable proxy for how many reviews a fetch will actually find under
+    one specific `parent_asin` — a large gap between `rating_number` and
+    actual fetched matches is a sign the product's reviews live elsewhere.
+    **Mechanism:** `config.load_selected_parent_asins()` (the `selected`
+    column) is now the single source of truth re-read by `fetch_reviews.py`,
+    `clean.py`, and `load_duckdb.py` alike, so deselecting a product after
+    fetch excludes it at the `clean` step (new `deselected_product_dropped`
+    stat) without needing to re-fetch; `load_duckdb.py` re-filters cleaned
+    reviews against the current selection as a defensive second check
+    (otherwise a stale review's `parent_asin` would violate the
+    `reviews.parent_asin` foreign key against `products`).
+    `select_sample.py` needed no change — it already derives its per-product
+    allocation from whatever `parent_asin`s are actually present in the
+    loaded `reviews` table.

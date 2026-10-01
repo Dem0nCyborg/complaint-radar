@@ -1,0 +1,490 @@
+# ComplaintRadar — Phase 1 Data Quality Report
+
+## 1. Metadata filtering funnel
+- Metadata rows scanned: 3,735,584
+- Keyword matches before accessory exclusion, by category:
+  - air_fryer: 10,583
+  - blender: 11,374
+  - robot_vacuum: 3,860
+- Excluded as accessories/parts, by category (strong/weak tier):
+  - air_fryer: strong=6,572, weak=724
+  - blender: strong=2,194, weak=540
+  - robot_vacuum: strong=1,572, weak=133
+- Rows that failed to parse as JSON (skipped, not crashed): 0
+- Candidate rows with an unparseable price (kept, price=NULL): 0
+- Final candidates shown to user, by category:
+  - air_fryer: 3,287
+  - blender: 8,640
+  - robot_vacuum: 2,155
+
+## 2. Review fetch (full pass, selected products only)
+- Total review rows scanned: 67,409,944
+- Full pass complete: True
+- Total matches kept (raw, pre-cleaning): 90,748
+- Matches by product:
+  - B0BYRM8PXH: 19,184
+  - B0CDSLV93R: 699
+  - B0BQLF2WMN: 10,647
+  - B0BZT7SWZB: 3,606
+  - B0C2ZMCN8T: 6,694
+  - B0BCL798D9: 3,069
+  - B0CBT1F9QJ: 6,511
+  - B0BMWSG9RR: 2,033
+  - B0BTPR8Q2Q: 2,295
+  - B07FDJMC9Q: 5,925
+  - B00NGV4506: 7,011
+  - B07DL4QY5V: 6,727
+  - B09TR3DQ8R: 5,417
+  - B0BJCDKNT2: 1,748
+  - B0BLL3SCXK: 5,345
+  - B09YZ931H2: 2,144
+  - B0BLZKZ5P5: 1,648
+  - B00AIHD94Y: 45
+
+## 3. Cleaning
+- Raw reviews in: 90,748
+- Dropped (product deselected after fetch): 45
+- Dropped (empty text): 66
+- Dropped (same-listing duplicate): 799
+- Dropped (cross-listing duplicate -- same review, different parent_asin): 0
+- Flagged non-English (kept, not dropped): 5,271
+- Final cleaned count: 89,838
+
+## 4. Loaded data / sampling
+- Products loaded: 17
+- Reviews loaded (full set, feeds trend analysis): 89,838
+- Reviews flagged in_sample (feeds LLM extraction, seed=42): 4,000
+  - Stratified by product: target 4,000, base allocation 235/product, English-only pool per product (see CLAUDE.md).
+    - B00NGV4506: allocated=236 english_pool=6280 taken=236
+    - B07DL4QY5V: allocated=236 english_pool=6312 taken=236
+    - B07FDJMC9Q: allocated=236 english_pool=5434 taken=236
+    - B09TR3DQ8R: allocated=236 english_pool=5000 taken=236
+    - B09YZ931H2: allocated=236 english_pool=2065 taken=236
+    - B0BCL798D9: allocated=235 english_pool=2706 taken=235
+    - B0BJCDKNT2: allocated=235 english_pool=1600 taken=235
+    - B0BLL3SCXK: allocated=235 english_pool=5157 taken=235
+    - B0BLZKZ5P5: allocated=235 english_pool=1556 taken=235
+    - B0BMWSG9RR: allocated=235 english_pool=1955 taken=235
+    - B0BQLF2WMN: allocated=235 english_pool=9497 taken=235
+    - B0BTPR8Q2Q: allocated=235 english_pool=2183 taken=235
+    - B0BYRM8PXH: allocated=235 english_pool=18495 taken=235
+    - B0BZT7SWZB: allocated=235 english_pool=3427 taken=235
+    - B0C2ZMCN8T: allocated=235 english_pool=6376 taken=235
+    - B0CBT1F9QJ: allocated=235 english_pool=5860 taken=235
+    - B0CDSLV93R: allocated=235 english_pool=664 taken=235
+- Hand-labeling sample size (seed=7): 0
+- Reviews hand-labeled so far: 0
+
+**Reading caveat:** the hand-labeling sample is stratified ~50% 1-3 star / ~50% 4-5 star, not the natural rating distribution. Any accuracy/precision number computed against it reflects a complaint-enriched mix and needs reweighting before it generalizes to the full review population.
+
+## 5. Review date ranges and quarterly volume (for trend chart planning)
+- Earliest / latest review date per product:
+  - B00NGV4506: 2014-11-04 to 2023-09-02 (6,965 reviews)
+  - B07DL4QY5V: 2018-08-15 to 2023-08-12 (6,677 reviews)
+  - B07FDJMC9Q: 2018-10-11 to 2023-09-04 (5,867 reviews)
+  - B09TR3DQ8R: 2017-11-20 to 2023-08-29 (5,348 reviews)
+  - B09YZ931H2: 2020-09-28 to 2023-08-25 (2,118 reviews)
+  - B0BCL798D9: 2015-10-02 to 2023-09-03 (3,027 reviews)
+  - B0BJCDKNT2: 2020-09-06 to 2023-08-26 (1,732 reviews)
+  - B0BLL3SCXK: 2019-09-23 to 2023-09-11 (5,287 reviews)
+  - B0BLZKZ5P5: 2019-08-29 to 2023-08-31 (1,633 reviews)
+  - B0BMWSG9RR: 2020-12-17 to 2023-08-23 (2,015 reviews)
+  - B0BQLF2WMN: 2013-03-31 to 2023-09-12 (10,545 reviews)
+  - B0BTPR8Q2Q: 2020-07-30 to 2023-08-04 (2,272 reviews)
+  - B0BYRM8PXH: 2018-05-14 to 2023-08-17 (19,003 reviews)
+  - B0BZT7SWZB: 2020-07-04 to 2023-09-07 (3,566 reviews)
+  - B0C2ZMCN8T: 2019-10-17 to 2023-08-29 (6,629 reviews)
+  - B0CBT1F9QJ: 2012-10-30 to 2023-08-21 (6,465 reviews)
+  - B0CDSLV93R: 2018-04-03 to 2023-08-15 (689 reviews)
+
+- Review counts per product per quarter:
+  - B00NGV4506:
+    - 2014-Q4: 21
+    - 2015-Q1: 58
+    - 2015-Q2: 45
+    - 2015-Q3: 63
+    - 2015-Q4: 47
+    - 2016-Q1: 93
+    - 2016-Q2: 76
+    - 2016-Q3: 104
+    - 2016-Q4: 105
+    - 2017-Q1: 225
+    - 2017-Q2: 206
+    - 2017-Q3: 254
+    - 2017-Q4: 218
+    - 2018-Q1: 239
+    - 2018-Q2: 206
+    - 2018-Q3: 187
+    - 2018-Q4: 257
+    - 2019-Q1: 377
+    - 2019-Q2: 298
+    - 2019-Q3: 556
+    - 2019-Q4: 291
+    - 2020-Q1: 293
+    - 2020-Q2: 252
+    - 2020-Q3: 341
+    - 2020-Q4: 186
+    - 2021-Q1: 274
+    - 2021-Q2: 303
+    - 2021-Q3: 349
+    - 2021-Q4: 174
+    - 2022-Q1: 166
+    - 2022-Q2: 153
+    - 2022-Q3: 190
+    - 2022-Q4: 149
+    - 2023-Q1: 122
+    - 2023-Q2: 71
+    - 2023-Q3: 16
+  - B07DL4QY5V:
+    - 2018-Q3: 12
+    - 2018-Q4: 211
+    - 2019-Q1: 451
+    - 2019-Q2: 290
+    - 2019-Q3: 266
+    - 2019-Q4: 514
+    - 2020-Q1: 1,574
+    - 2020-Q2: 472
+    - 2020-Q3: 447
+    - 2020-Q4: 683
+    - 2021-Q1: 881
+    - 2021-Q2: 465
+    - 2021-Q3: 142
+    - 2021-Q4: 95
+    - 2022-Q1: 61
+    - 2022-Q2: 32
+    - 2022-Q3: 33
+    - 2022-Q4: 21
+    - 2023-Q1: 17
+    - 2023-Q2: 7
+    - 2023-Q3: 3
+  - B07FDJMC9Q:
+    - 2018-Q4: 62
+    - 2019-Q1: 403
+    - 2019-Q2: 435
+    - 2019-Q3: 821
+    - 2019-Q4: 423
+    - 2020-Q1: 418
+    - 2020-Q2: 203
+    - 2020-Q3: 257
+    - 2020-Q4: 259
+    - 2021-Q1: 397
+    - 2021-Q2: 307
+    - 2021-Q3: 216
+    - 2021-Q4: 195
+    - 2022-Q1: 206
+    - 2022-Q2: 263
+    - 2022-Q3: 274
+    - 2022-Q4: 274
+    - 2023-Q1: 293
+    - 2023-Q2: 123
+    - 2023-Q3: 38
+  - B09TR3DQ8R:
+    - 2017-Q4: 15
+    - 2018-Q1: 237
+    - 2018-Q2: 223
+    - 2018-Q3: 205
+    - 2018-Q4: 279
+    - 2019-Q1: 398
+    - 2019-Q2: 383
+    - 2019-Q3: 356
+    - 2019-Q4: 384
+    - 2020-Q1: 711
+    - 2020-Q2: 369
+    - 2020-Q3: 310
+    - 2020-Q4: 215
+    - 2021-Q1: 457
+    - 2021-Q2: 228
+    - 2021-Q3: 120
+    - 2021-Q4: 94
+    - 2022-Q1: 98
+    - 2022-Q2: 80
+    - 2022-Q3: 49
+    - 2022-Q4: 36
+    - 2023-Q1: 64
+    - 2023-Q2: 28
+    - 2023-Q3: 9
+  - B09YZ931H2:
+    - 2020-Q3: 3
+    - 2020-Q4: 197
+    - 2021-Q1: 329
+    - 2021-Q2: 172
+    - 2021-Q3: 134
+    - 2021-Q4: 122
+    - 2022-Q1: 179
+    - 2022-Q2: 156
+    - 2022-Q3: 196
+    - 2022-Q4: 235
+    - 2023-Q1: 311
+    - 2023-Q2: 65
+    - 2023-Q3: 19
+  - B0BCL798D9:
+    - 2015-Q4: 7
+    - 2016-Q1: 52
+    - 2016-Q2: 98
+    - 2016-Q3: 73
+    - 2016-Q4: 64
+    - 2017-Q1: 71
+    - 2017-Q2: 52
+    - 2017-Q3: 84
+    - 2017-Q4: 88
+    - 2018-Q1: 84
+    - 2018-Q2: 96
+    - 2018-Q3: 74
+    - 2018-Q4: 44
+    - 2019-Q1: 42
+    - 2019-Q2: 59
+    - 2019-Q3: 135
+    - 2019-Q4: 156
+    - 2020-Q1: 199
+    - 2020-Q2: 132
+    - 2020-Q3: 217
+    - 2020-Q4: 30
+    - 2021-Q1: 189
+    - 2021-Q2: 180
+    - 2021-Q3: 355
+    - 2021-Q4: 152
+    - 2022-Q1: 60
+    - 2022-Q2: 53
+    - 2022-Q3: 57
+    - 2022-Q4: 48
+    - 2023-Q1: 45
+    - 2023-Q2: 27
+    - 2023-Q3: 4
+  - B0BJCDKNT2:
+    - 2020-Q3: 5
+    - 2020-Q4: 77
+    - 2021-Q1: 189
+    - 2021-Q2: 219
+    - 2021-Q3: 182
+    - 2021-Q4: 191
+    - 2022-Q1: 229
+    - 2022-Q2: 173
+    - 2022-Q3: 122
+    - 2022-Q4: 143
+    - 2023-Q1: 158
+    - 2023-Q2: 33
+    - 2023-Q3: 11
+  - B0BLL3SCXK:
+    - 2019-Q3: 3
+    - 2019-Q4: 389
+    - 2020-Q1: 772
+    - 2020-Q2: 201
+    - 2020-Q3: 190
+    - 2020-Q4: 843
+    - 2021-Q1: 789
+    - 2021-Q2: 310
+    - 2021-Q3: 232
+    - 2021-Q4: 335
+    - 2022-Q1: 225
+    - 2022-Q2: 118
+    - 2022-Q3: 142
+    - 2022-Q4: 357
+    - 2023-Q1: 309
+    - 2023-Q2: 54
+    - 2023-Q3: 18
+  - B0BLZKZ5P5:
+    - 2019-Q3: 25
+    - 2019-Q4: 72
+    - 2020-Q1: 201
+    - 2020-Q2: 70
+    - 2020-Q3: 91
+    - 2020-Q4: 143
+    - 2021-Q1: 188
+    - 2021-Q2: 157
+    - 2021-Q3: 117
+    - 2021-Q4: 99
+    - 2022-Q1: 75
+    - 2022-Q2: 69
+    - 2022-Q3: 99
+    - 2022-Q4: 105
+    - 2023-Q1: 74
+    - 2023-Q2: 35
+    - 2023-Q3: 13
+  - B0BMWSG9RR:
+    - 2020-Q4: 3
+    - 2021-Q1: 48
+    - 2021-Q2: 117
+    - 2021-Q3: 177
+    - 2021-Q4: 348
+    - 2022-Q1: 530
+    - 2022-Q2: 220
+    - 2022-Q3: 256
+    - 2022-Q4: 156
+    - 2023-Q1: 110
+    - 2023-Q2: 38
+    - 2023-Q3: 12
+  - B0BQLF2WMN:
+    - 2013-Q1: 1
+    - 2013-Q2: 1
+    - 2014-Q1: 1
+    - 2014-Q2: 2
+    - 2014-Q4: 2
+    - 2015-Q3: 9
+    - 2015-Q4: 94
+    - 2016-Q1: 209
+    - 2016-Q2: 165
+    - 2016-Q3: 153
+    - 2016-Q4: 143
+    - 2017-Q1: 259
+    - 2017-Q2: 235
+    - 2017-Q3: 185
+    - 2017-Q4: 141
+    - 2018-Q1: 253
+    - 2018-Q2: 227
+    - 2018-Q3: 173
+    - 2018-Q4: 254
+    - 2019-Q1: 390
+    - 2019-Q2: 329
+    - 2019-Q3: 552
+    - 2019-Q4: 398
+    - 2020-Q1: 468
+    - 2020-Q2: 539
+    - 2020-Q3: 515
+    - 2020-Q4: 343
+    - 2021-Q1: 627
+    - 2021-Q2: 665
+    - 2021-Q3: 503
+    - 2021-Q4: 353
+    - 2022-Q1: 366
+    - 2022-Q2: 432
+    - 2022-Q3: 491
+    - 2022-Q4: 383
+    - 2023-Q1: 472
+    - 2023-Q2: 171
+    - 2023-Q3: 41
+  - B0BTPR8Q2Q:
+    - 2020-Q3: 19
+    - 2020-Q4: 226
+    - 2021-Q1: 280
+    - 2021-Q2: 308
+    - 2021-Q3: 218
+    - 2021-Q4: 135
+    - 2022-Q1: 129
+    - 2022-Q2: 223
+    - 2022-Q3: 390
+    - 2022-Q4: 187
+    - 2023-Q1: 118
+    - 2023-Q2: 30
+    - 2023-Q3: 9
+  - B0BYRM8PXH:
+    - 2018-Q2: 93
+    - 2018-Q3: 332
+    - 2018-Q4: 735
+    - 2019-Q1: 1,330
+    - 2019-Q2: 1,123
+    - 2019-Q3: 1,974
+    - 2019-Q4: 1,167
+    - 2020-Q1: 1,575
+    - 2020-Q2: 1,651
+    - 2020-Q3: 1,324
+    - 2020-Q4: 928
+    - 2021-Q1: 1,370
+    - 2021-Q2: 896
+    - 2021-Q3: 1,006
+    - 2021-Q4: 796
+    - 2022-Q1: 589
+    - 2022-Q2: 534
+    - 2022-Q3: 622
+    - 2022-Q4: 460
+    - 2023-Q1: 353
+    - 2023-Q2: 125
+    - 2023-Q3: 20
+  - B0BZT7SWZB:
+    - 2020-Q3: 74
+    - 2020-Q4: 96
+    - 2021-Q1: 246
+    - 2021-Q2: 272
+    - 2021-Q3: 284
+    - 2021-Q4: 197
+    - 2022-Q1: 386
+    - 2022-Q2: 301
+    - 2022-Q3: 459
+    - 2022-Q4: 403
+    - 2023-Q1: 581
+    - 2023-Q2: 221
+    - 2023-Q3: 46
+  - B0C2ZMCN8T:
+    - 2019-Q4: 79
+    - 2020-Q1: 239
+    - 2020-Q2: 399
+    - 2020-Q3: 525
+    - 2020-Q4: 460
+    - 2021-Q1: 867
+    - 2021-Q2: 678
+    - 2021-Q3: 595
+    - 2021-Q4: 535
+    - 2022-Q1: 680
+    - 2022-Q2: 383
+    - 2022-Q3: 340
+    - 2022-Q4: 345
+    - 2023-Q1: 419
+    - 2023-Q2: 66
+    - 2023-Q3: 19
+  - B0CBT1F9QJ:
+    - 2012-Q4: 9
+    - 2013-Q1: 23
+    - 2013-Q2: 75
+    - 2013-Q3: 72
+    - 2013-Q4: 66
+    - 2014-Q1: 110
+    - 2014-Q2: 113
+    - 2014-Q3: 115
+    - 2014-Q4: 113
+    - 2015-Q1: 142
+    - 2015-Q2: 147
+    - 2015-Q3: 191
+    - 2015-Q4: 106
+    - 2016-Q1: 120
+    - 2016-Q2: 140
+    - 2016-Q3: 144
+    - 2016-Q4: 86
+    - 2017-Q1: 153
+    - 2017-Q2: 165
+    - 2017-Q3: 294
+    - 2017-Q4: 178
+    - 2018-Q1: 295
+    - 2018-Q2: 165
+    - 2018-Q3: 154
+    - 2018-Q4: 161
+    - 2019-Q1: 149
+    - 2019-Q2: 134
+    - 2019-Q3: 187
+    - 2019-Q4: 197
+    - 2020-Q1: 327
+    - 2020-Q2: 185
+    - 2020-Q3: 282
+    - 2020-Q4: 237
+    - 2021-Q1: 217
+    - 2021-Q2: 265
+    - 2021-Q3: 243
+    - 2021-Q4: 120
+    - 2022-Q1: 119
+    - 2022-Q2: 142
+    - 2022-Q3: 109
+    - 2022-Q4: 79
+    - 2023-Q1: 90
+    - 2023-Q2: 36
+    - 2023-Q3: 10
+  - B0CDSLV93R:
+    - 2018-Q2: 2
+    - 2018-Q3: 3
+    - 2018-Q4: 1
+    - 2019-Q1: 6
+    - 2019-Q2: 6
+    - 2019-Q3: 3
+    - 2019-Q4: 9
+    - 2020-Q1: 5
+    - 2020-Q2: 4
+    - 2020-Q3: 8
+    - 2020-Q4: 8
+    - 2021-Q1: 14
+    - 2021-Q2: 11
+    - 2021-Q3: 19
+    - 2021-Q4: 35
+    - 2022-Q1: 74
+    - 2022-Q2: 113
+    - 2022-Q3: 123
+    - 2022-Q4: 83
+    - 2023-Q1: 104
+    - 2023-Q2: 44
+    - 2023-Q3: 14
