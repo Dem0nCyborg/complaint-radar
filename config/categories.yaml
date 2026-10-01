@@ -1,0 +1,42 @@
+# Shared complaint taxonomy + severity rubric.
+#
+# Used by src/label_tool.py today, and intended to be reused verbatim in the
+# Phase 2 LLM extraction prompt so human labels and LLM output are measured
+# against the exact same definitions.
+#
+# PLACEHOLDER: this category list was drafted before reading real reviews.
+# Finalize it after running `python -m src.label_tool --browse` (see README)
+# and before starting the real 150-review labeling pass.
+
+categories:
+  - key: no_complaint
+    label: "No complaint"
+  - key: durability_defect
+    label: "Durability / defect"
+  - key: performance
+    label: "Performance"
+  - key: safety
+    label: "Safety"
+  - key: customer_service
+    label: "Customer service"
+  - key: shipping_packaging
+    label: "Shipping / packaging"
+  - key: price_value
+    label: "Price / value"
+  - key: other
+    label: "Other (free-text note)"
+
+severity:
+  1:
+    label: "Minor"
+    description: "annoyance or cosmetic issue; product still does its main job fine"
+  2:
+    label: "Moderate"
+    description: "functional problem with a workaround, or reduced performance"
+  3:
+    label: "Severe"
+    description: "safety hazard, or total failure (stopped working, can't do its main job, returned/replaced)"
+
+labeling_rules:
+  - "Judge what the review says happened, not how angry the reviewer sounds."
+  - "If torn between two severity levels, pick the lower one."
