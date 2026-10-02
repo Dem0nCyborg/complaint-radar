@@ -263,6 +263,31 @@ LABEL_SAMPLE_SEED = 7
 LABEL_SAMPLE_LOW_STAR_FRACTION = 0.5  # target share of the sample that is 1-3 star
 
 
+# --- extraction (Phase 2) ---------------------------------------------------
+
+REFERENCE_LABELS_CSV_PATH = INTERIM_DIR / "reference_labels.csv"
+LABEL_SAMPLE_EXPORT_CSV_PATH = INTERIM_DIR / "label_sample_export.csv"
+AGREEMENT_STATS_PATH = INTERIM_DIR / "agreement_stats.json"
+
+# VERIFY BEFORE RUNNING: model name, pricing, and free-tier rate limits are
+# all time-sensitive and may have changed since this was written. Check
+# https://ai.google.dev/gemini-api/docs/models and
+# https://ai.google.dev/gemini-api/docs/pricing before a real run.
+EXTRACTION_MODEL = "gemini-2.5-flash"
+EXTRACTION_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
+
+EXTRACTION_BATCH_SIZE = 20  # reviews per API request
+EXTRACTION_MAX_MALFORMED_RETRIES = 3  # per batch, before giving up on it
+EXTRACTION_MAX_RATE_LIMIT_RETRIES = 8  # per request, exponential backoff
+EXTRACTION_RATE_LIMIT_BASE_WAIT_SECONDS = 5
+
+# Placeholder estimate, $ per 1M tokens -- NOT verified against current
+# pricing. Used only to print a rough order-of-magnitude cost estimate
+# before a run; the actual run may be entirely free-tier.
+EXTRACTION_EST_INPUT_COST_PER_MILLION = 0.075
+EXTRACTION_EST_OUTPUT_COST_PER_MILLION = 0.30
+
+
 def compute_review_id(user_id: str, parent_asin: str, timestamp: int, text: str) -> str:
     """Stable hash used as BOTH the dedupe key and the stored review_id.
 

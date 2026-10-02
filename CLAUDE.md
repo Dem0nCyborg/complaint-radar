@@ -334,3 +334,62 @@ Format: **Decision** — Rejected alternative(s) — Why.
     the existing (empty) `labels` table in place with `ALTER TABLE`;
     `src/load_duckdb.py`'s `CREATE TABLE` reflects the new schema for any
     future fresh database.
+
+25. **Extraction model switched from Anthropic (claude-haiku) to Gemini
+    Flash via Google AI Studio** (`src/extract.py`, model name in
+    `config.EXTRACTION_MODEL`), key as `GEMINI_API_KEY` in `.env`. —
+    *Rejected:* calling an Anthropic model directly (no API access set up
+    for it). — *Why:* Google AI Studio has a usable free tier, avoiding a
+    paid API dependency for a portfolio project. **Caveat:** the exact
+    model name, pricing, and free-tier rate limits in `config.py` are
+    placeholders, flagged in-file to verify against
+    ai.google.dev/gemini-api/docs before a real run — this assistant's
+    knowledge of current Gemini model names/pricing may be stale.
+
+26. **`src/taxonomy.py` factored out as a shared module** (`load_taxonomy`,
+    `valid_category_keys`, `validate_label`, `render_prompt_block`), used
+    by both `import_reference_labels.py` and `extract.py`. — *Rejected:*
+    each script re-implementing its own copy of category/severity
+    validation. — *Why:* reference labels and extraction output must be
+    held to the identical taxonomy rules for the agreement numbers to mean
+    anything; one shared validator makes that true by construction instead
+    of by discipline. Caught during this refactor: the primary-complaint
+    rule and tie-breakers in `categories.yaml` were originally written as
+    YAML comments, which `yaml.safe_load()` silently ignores — they would
+    never have reached the extraction prompt. Fixed by moving them into
+    real YAML fields (`primary_complaint_rule`, `tie_breakers`) that
+    `render_prompt_block()` actually reads.
+
+27. **Extraction pipeline design** (`src/extract.py`): batches of ~20
+    reviews per request; Gemini's native `responseSchema` (JSON mode)
+    constrains the shape of the model's output, then every item is
+    re-validated independently with Pydantic plus `taxonomy.validate_label`
+    (never trusting the API's structured-output guarantee alone); a batch
+    that fails validation gets one corrective follow-up prompt (up to
+    `EXTRACTION_MAX_MALFORMED_RETRIES`, default 3) listing what was wrong,
+    and if still broken after that, those review_ids are left uncached
+    rather than the run crashing — they're picked up automatically on the
+    next invocation. The `extractions` table (keyed on `review_id, model`)
+    is simultaneously the cache and the resume mechanism: anything already
+    there is never re-sent. Rate-limit (429) and network errors get
+    exponential backoff (`EXTRACTION_MAX_RATE_LIMIT_RETRIES`, respecting a
+    `Retry-After` header when the API sends one). — *Rejected:* trusting
+    `responseSchema` alone without independent validation; crashing the
+    whole run on one bad batch; an unbounded retry loop. — *Why:* API
+    structured-output guarantees aren't a substitute for enforcing our own
+    taxonomy rules (e.g. severity must be null for `no_complaint`), and a
+    multi-hour run against thousands of reviews needs to survive a single
+    bad batch or a transient rate limit without losing all prior progress.
+    Verified with mocked API responses (no real key needed): a perfect
+    first response, a malformed-then-corrected retry, and a
+    permanently-malformed batch that correctly gives up and reports every
+    review_id as still-pending rather than raising.
+
+28. **`src/agreement.py` implements accuracy, Cohen's kappa, per-category
+    precision/recall, a confusion matrix, and severity agreement in plain
+    Python** (no sklearn/numpy). — *Rejected:* adding a stats/ML library
+    for this. — *Why:* these are a few dozen lines of arithmetic over
+    small label sets (150 pairs); a dependency isn't justified. Verified
+    against a hand-computed 10-pair synthetic dataset (accuracy, kappa,
+    severity exact-match/mean-abs-diff, and every per-category
+    precision/recall value matched hand calculation exactly).

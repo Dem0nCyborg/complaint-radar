@@ -29,16 +29,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import duckdb
-import yaml
 
-from src import config
+from src import config, taxonomy as taxonomy_mod
 
 LABELER_NAME = "claude-chat-reference"
 NULL_TOKENS = {"", "null", "none"}
-
-
-def load_taxonomy() -> dict:
-    return yaml.safe_load(config.CATEGORIES_YAML_PATH.read_text())
 
 
 def validate_rows(rows: list[dict], valid_categories: set[str]) -> tuple[list[tuple], list[str]]:
@@ -60,23 +55,12 @@ def validate_rows(rows: list[dict], valid_categories: set[str]) -> tuple[list[tu
             continue
         seen_ids.add(review_id)
 
-        if category not in valid_categories:
-            errors.append(f"line {i} ({review_id}): '{category}' is not a category in categories.yaml")
-            continue
-
-        if category == "no_complaint":
-            if severity_raw.lower() not in NULL_TOKENS:
-                errors.append(f"line {i} ({review_id}): severity must be blank for no_complaint, got '{severity_raw}'")
-                continue
-            severity = None
-        else:
-            if severity_raw not in ("1", "2", "3"):
-                errors.append(f"line {i} ({review_id}): severity must be 1, 2, or 3 for '{category}', got '{severity_raw}'")
-                continue
-            severity = int(severity_raw)
-
-        if category == "other" and not note:
-            errors.append(f"line {i} ({review_id}): category 'other' requires a note")
+        severity = None if severity_raw.lower() in NULL_TOKENS else (
+            int(severity_raw) if severity_raw in ("1", "2", "3") else severity_raw
+        )
+        row_errors = taxonomy_mod.validate_label(category, severity, note, valid_categories)
+        if row_errors:
+            errors.extend(f"line {i} ({review_id}): {e}" for e in row_errors)
             continue
 
         parsed.append((review_id, category, severity, note))
@@ -95,8 +79,7 @@ def main() -> None:
     if not config.DUCKDB_PATH.exists():
         raise SystemExit(f"{config.DUCKDB_PATH} not found. Run the pipeline through load_duckdb.py first.")
 
-    taxonomy = load_taxonomy()
-    valid_categories = {c["key"] for c in taxonomy["categories"]}
+    valid_categories = taxonomy_mod.valid_category_keys()
 
     with open(csv_path, newline="", encoding="utf-8") as f:
         raw_rows = list(csv.DictReader(f))

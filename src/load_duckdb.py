@@ -60,6 +60,20 @@ CREATE TABLE IF NOT EXISTS labels (
     labeler             TEXT,
     labeled_at          TIMESTAMP
 );
+
+-- One row per review per extraction model. Doubles as the cache/resume
+-- mechanism for src/extract.py: a review_id+model pair present here was
+-- already successfully extracted and is never re-sent to the API.
+CREATE TABLE IF NOT EXISTS extractions (
+    review_id           TEXT REFERENCES reviews(review_id),
+    model               TEXT,
+    complaint_category  TEXT,
+    severity            INTEGER,
+    note                TEXT,
+    raw_response        TEXT,
+    extracted_at        TIMESTAMP,
+    PRIMARY KEY (review_id, model)
+);
 """
 
 
