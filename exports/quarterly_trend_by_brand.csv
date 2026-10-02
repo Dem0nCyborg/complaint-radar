@@ -1,0 +1,101 @@
+category,brand,year,quarter,total_reviews,complaint_reviews,complaint_share
+air_fryer,Cosori,2021,1,9,0,0.0
+air_fryer,Cosori,2021,2,24,2,0.0833
+air_fryer,Cosori,2021,3,24,4,0.1667
+air_fryer,Cosori,2021,4,21,7,0.3333
+air_fryer,Cosori,2022,1,22,4,0.1818
+air_fryer,Cosori,2022,2,20,7,0.35
+air_fryer,Cosori,2022,3,31,3,0.0968
+air_fryer,Cosori,2022,4,25,9,0.36
+air_fryer,Cosori,2023,1,43,14,0.3256
+air_fryer,Cosori,2023,2,16,6,0.375
+air_fryer,Gowise Usa,2021,1,86,25,0.2907
+air_fryer,Gowise Usa,2021,2,41,18,0.439
+air_fryer,Gowise Usa,2021,3,16,5,0.3125
+air_fryer,Gowise Usa,2021,4,23,13,0.5652
+air_fryer,Gowise Usa,2022,1,19,9,0.4737
+air_fryer,Gowise Usa,2022,2,18,7,0.3889
+air_fryer,Gowise Usa,2022,3,13,5,0.3846
+air_fryer,Gowise Usa,2022,4,7,4,0.5714
+air_fryer,Gowise Usa,2023,1,9,2,0.2222
+air_fryer,Gowise Usa,2023,2,4,2,0.5
+air_fryer,Instant,2021,1,31,16,0.5161
+air_fryer,Instant,2021,2,32,10,0.3125
+air_fryer,Instant,2021,3,35,10,0.2857
+air_fryer,Instant,2021,4,27,11,0.4074
+air_fryer,Instant,2022,1,38,14,0.3684
+air_fryer,Instant,2022,2,20,12,0.6
+air_fryer,Instant,2022,3,18,8,0.4444
+air_fryer,Instant,2022,4,16,7,0.4375
+air_fryer,Instant,2023,1,16,7,0.4375
+air_fryer,Instant,2023,2,2,0,0.0
+air_fryer,Ninja,2021,1,89,25,0.2809
+air_fryer,Ninja,2021,2,105,18,0.1714
+air_fryer,Ninja,2021,3,81,23,0.284
+air_fryer,Ninja,2021,4,74,17,0.2297
+air_fryer,Ninja,2022,1,55,11,0.2
+air_fryer,Ninja,2022,2,66,15,0.2273
+air_fryer,Ninja,2022,3,70,20,0.2857
+air_fryer,Ninja,2022,4,66,17,0.2576
+air_fryer,Ninja,2023,1,75,23,0.3067
+air_fryer,Ninja,2023,2,25,8,0.32
+blender,Magic Bullet,2021,1,43,17,0.3953
+blender,Magic Bullet,2021,2,30,19,0.6333
+blender,Magic Bullet,2021,3,34,17,0.5
+blender,Magic Bullet,2021,4,14,10,0.7143
+blender,Magic Bullet,2022,1,15,6,0.4
+blender,Magic Bullet,2022,2,27,17,0.6296
+blender,Magic Bullet,2022,3,24,17,0.7083
+blender,Magic Bullet,2022,4,17,11,0.6471
+blender,Magic Bullet,2023,1,23,12,0.5217
+blender,Magic Bullet,2023,2,8,5,0.625
+blender,Ninja,2021,1,72,29,0.4028
+blender,Ninja,2021,2,93,33,0.3548
+blender,Ninja,2021,3,81,29,0.358
+blender,Ninja,2021,4,52,19,0.3654
+blender,Ninja,2022,1,68,32,0.4706
+blender,Ninja,2022,2,76,27,0.3553
+blender,Ninja,2022,3,97,30,0.3093
+blender,Ninja,2022,4,58,26,0.4483
+blender,Ninja,2023,1,73,19,0.2603
+blender,Ninja,2023,2,36,15,0.4167
+blender,Oster,2021,1,40,15,0.375
+blender,Oster,2021,2,33,13,0.3939
+blender,Oster,2021,3,72,25,0.3472
+blender,Oster,2021,4,28,12,0.4286
+blender,Oster,2022,1,18,13,0.7222
+blender,Oster,2022,2,11,7,0.6364
+blender,Oster,2022,3,9,6,0.6667
+blender,Oster,2022,4,12,5,0.4167
+blender,Oster,2023,1,9,2,0.2222
+blender,Oster,2023,2,3,1,0.3333
+robot_vacuum,Shark,2021,1,111,56,0.5045
+robot_vacuum,Shark,2021,2,86,59,0.686
+robot_vacuum,Shark,2021,3,63,35,0.5556
+robot_vacuum,Shark,2021,4,71,36,0.507
+robot_vacuum,Shark,2022,1,98,50,0.5102
+robot_vacuum,Shark,2022,2,52,26,0.5
+robot_vacuum,Shark,2022,3,89,51,0.573
+robot_vacuum,Shark,2022,4,64,41,0.6406
+robot_vacuum,Shark,2023,1,59,42,0.7119
+robot_vacuum,Shark,2023,2,12,7,0.5833
+robot_vacuum,eufy,2021,1,55,18,0.3273
+robot_vacuum,eufy,2021,2,22,7,0.3182
+robot_vacuum,eufy,2021,3,40,20,0.5
+robot_vacuum,eufy,2021,4,25,9,0.36
+robot_vacuum,eufy,2022,1,16,4,0.25
+robot_vacuum,eufy,2022,2,19,9,0.4737
+robot_vacuum,eufy,2022,3,20,6,0.3
+robot_vacuum,eufy,2022,4,23,9,0.3913
+robot_vacuum,eufy,2023,1,12,6,0.5
+robot_vacuum,eufy,2023,2,3,2,0.6667
+robot_vacuum,iRobot,2021,1,148,85,0.5743
+robot_vacuum,iRobot,2021,2,85,48,0.5647
+robot_vacuum,iRobot,2021,3,41,32,0.7805
+robot_vacuum,iRobot,2021,4,34,19,0.5588
+robot_vacuum,iRobot,2022,1,39,28,0.7179
+robot_vacuum,iRobot,2022,2,25,22,0.88
+robot_vacuum,iRobot,2022,3,30,21,0.7
+robot_vacuum,iRobot,2022,4,23,19,0.8261
+robot_vacuum,iRobot,2023,1,36,27,0.75
+robot_vacuum,iRobot,2023,2,11,10,0.9091

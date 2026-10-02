@@ -1,0 +1,11 @@
+category,brand,total_reviews,complaint_reviews,complaint_share
+air_fryer,Instant,235,95,0.4043
+air_fryer,Gowise Usa,236,90,0.3814
+air_fryer,Ninja,706,177,0.2507
+air_fryer,Cosori,235,56,0.2383
+blender,Magic Bullet,235,131,0.5574
+blender,Oster,235,99,0.4213
+blender,Ninja,706,259,0.3669
+robot_vacuum,iRobot,472,311,0.6589
+robot_vacuum,Shark,705,403,0.5716
+robot_vacuum,eufy,235,90,0.383

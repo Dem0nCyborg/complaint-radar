@@ -9,15 +9,73 @@ Hugging Face.
 
 ## Status
 
-**Phase 1** (data ingestion, cleaning, sampling) is complete and has been
-run on real data. **Phase 2** (reference labels, LLM extraction, agreement
-scoring) and **Phase 3** (Tableau exports, weekly brief) are built and
-tested against synthetic data, but have not yet been run on the real
-dataset. There are no complaint-extraction results, agreement numbers, or
-charts yet. This README states clearly, section by section, what's actually
-been run versus what's only been built and verified with synthetic data.
+All three phases have been run on real data. All 4,000 sampled reviews
+were extracted by `gemini-3.5-flash-lite`, the agreement check against the
+reference labels is done, the Tableau exports are generated, and the weekly
+brief has been run.
+
+**Dashboard:** DASHBOARD_LINK_PENDING
 
 See `CLAUDE.md` for the decision log behind every non-obvious choice below.
+
+## Results
+
+**Extraction agreement (model-to-model).** On the 150-review label sample,
+`gemini-3.5-flash-lite` matched the reference labels on **89.3%** of
+complaint categories (**Cohen's kappa 0.856**). Severity matched exactly on
+75.3% of the 81 reviews where both sides assigned one (mean absolute
+difference 0.27 on the 1-3 scale). The most common disagreement was
+performance vs. design/usability (3 of 19 performance reviews), a genuine
+judgment call in the taxonomy rather than a wrong reading. The extraction
+prompt was **not** tuned against these 150 labels, so the figure is not
+inflated by fitting to them. Reference labels are AI-generated (see
+Method); this is model-to-model agreement, not agreement with human
+annotators.
+
+**Complaint share by brand** (share of reviews in the 2021-Q1 to 2023-Q2
+sample that contain any complaint):
+
+| Category | Brand | Reviews | Complaint share |
+|---|---|---|---|
+| Air fryer | Instant | 235 | 40.4% |
+| Air fryer | GoWISE USA | 236 | 38.1% |
+| Air fryer | Ninja | 706 | 25.1% |
+| Air fryer | COSORI | 235 | 23.8% |
+| Blender | Magic Bullet | 235 | 55.7% |
+| Blender | Oster | 235 | 42.1% |
+| Blender | Ninja | 706 | 36.7% |
+| Robot vacuum | iRobot | 472 | 65.9% |
+| Robot vacuum | Shark | 705 | 57.2% |
+| Robot vacuum | eufy | 235 | 38.3% |
+
+Brands are compared within a category only. The products differ in price
+and type (for example, personal vs. countertop blenders), so these are
+descriptive figures, not a ranking of product quality.
+
+**The top complaint differs by category.** Air fryers: design/usability
+(134), durability/defect (125), safety (71). Blenders: durability/defect
+(195), performance (77). Robot vacuums: performance (267),
+durability/defect (209), connectivity/app (156). In a spot check of 12 of the 71
+air-fryer safety complaints, most described a burning-plastic or chemical
+smell.
+
+**Star ratings hide severity.** 83% of 1-star reviews (548 of 658) describe
+a severe problem, as expected. But 30 of 2,365 five-star reviews also
+describe a severe one, typically a unit that failed and was replaced, after
+which the reviewer still gave five stars. Star rating alone undercounts
+serious product failures.
+
+**No statistically reliable quarter-over-quarter changes.** The weekly
+brief tests every brand/quarter change with a two-proportion z-test and a
+Benjamini-Hochberg correction across all tests. Nothing survives in this
+sample: the largest raw swings (up to 31 points) rest on 14 to 31 reviews
+per quarter, and one of them (COSORI) reverses itself the next quarter. The
+brief reports that rather than presenting noise as a trend (see
+`reports/example_brief.md` and `CLAUDE.md` #33).
+
+**Cost.** About 210 API calls in total (8 for the pilot, 200 for the
+full run, plus retries). Estimated at about $0.59 at paid-tier list
+prices.
 
 ## Method
 
@@ -40,7 +98,7 @@ not agreement with a human-verified gold standard, and is never described
 that way.** See `CLAUDE.md` #22.
 
 **Extraction** (`src/extract.py`) runs the 4,000-review sample through
-Gemini Flash (Google AI Studio), batching ~20 reviews per request with
+Gemini 3.5 Flash-Lite (Google AI Studio), batching ~20 reviews per request with
 structured JSON output, independently re-validated with Pydantic against
 the same taxonomy rules as the reference labels. A malformed batch gets one
 corrective retry; a review that still fails is left uncached and picked up
@@ -55,10 +113,9 @@ agreement (exact-match rate and mean absolute difference). Implemented in
 plain Python, no stats library, verified against a hand-computed synthetic
 dataset.
 
-**Before running extraction on the full 4,000 reviews**, the plan is to
-estimate the API cost, run the 150-review `label_sample` first, and review
-the cost estimate and agreement numbers before proceeding, per the decision
-log. That pilot run has not happened yet (see Status).
+**Pilot first.** Extraction ran on the 150-review label sample first, and
+the cost estimate and agreement numbers were reviewed before the full
+4,000-review run.
 
 ## Data funnel (Phase 1, run on real data)
 
@@ -117,7 +174,7 @@ Requires Python 3.11+ (developed on 3.13).
 ## Pipeline (run in order)
 
 ```bash
-# --- Phase 1: already run on real data ---
+# --- Phase 1: data ---
 
 # 1. Stream item metadata only, filter to air fryers/blenders/robot vacuums,
 #    write candidates to data/interim/candidate_products.csv
@@ -149,7 +206,7 @@ python -m src.sample_for_labeling
 # 8. Regenerate the data-quality report any time after the steps above.
 python -m src.quality_report
 
-# --- Phase 2: built and tested, not yet run on real data ---
+# --- Phase 2: labels, extraction, agreement ---
 
 # 9. Export the 150 label_sample reviews for an external reference-labeling
 #    chat session (no DB access needed on the other end).
@@ -167,7 +224,7 @@ python -m src.agreement
 python -m src.extract --target in_sample --estimate-only
 python -m src.extract --target in_sample
 
-# --- Phase 3: built and tested, not yet run on real data ---
+# --- Phase 3: exports and brief ---
 
 # 12. Export CSVs for the Tableau dashboard (see exports/DASHBOARD_SPEC.md).
 python -m src.export_tableau
@@ -218,11 +275,13 @@ Output: `data/processed/complaint_radar.duckdb`,
   standard. See `CLAUDE.md` #22. This is stated here, in the Method
   section above, and in the decision log; it should not be described any
   other way in any chart, brief, or future write-up.
-- The Gemini model name, pricing, and free-tier rate limits in
-  `src/config.py` are placeholders flagged for verification against
-  current Google AI Studio documentation before a real run; this
-  assistant's knowledge of current model names/pricing may be stale. See
-  `CLAUDE.md` #25.
+- The Gemini model name and pricing in `src/config.py` were checked
+  against Google's documentation on 2026-10-02 (`CLAUDE.md` #32). Recheck
+  them if you run this much later.
+- Quarterly trend points rest on roughly 20 to 70 reviews per brand per
+  quarter, too few to detect changes reliably. That is why the brief
+  applies a multiple-comparisons correction, and why the dashboard's trend
+  chart should be read as descriptive.
 
 ## How this was built
 
@@ -241,12 +300,10 @@ source, e.g. `claude-chat-reference`), and `extractions` (one row per
 review per extraction model, doubling as the cache/resume mechanism for
 `src/extract.py`).
 
-## Next steps
+## Possible extensions
 
-1. Take `data/interim/label_sample_export.csv` to a Claude chat session,
-   bring back `data/interim/reference_labels.csv`, and run
-   `python -m src.import_reference_labels`.
-2. Add `GEMINI_API_KEY` to `.env`.
-3. Run the pilot (`src/extract.py --target label_sample`, then
-   `src/agreement.py`), and review the cost estimate and agreement numbers
-   before running the full 4,000-review extraction.
+- Run the same 150-review check against `gemini-3.8-flash` to measure what
+  the more expensive model adds over Flash-Lite.
+- Have a person label a subset of the 150 reviews, to check the reference
+  labels themselves.
+- Allow more than one complaint per review (multi-label).
