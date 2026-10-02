@@ -16,6 +16,7 @@ INTERIM_DIR = DATA_DIR / "interim"
 PROCESSED_DIR = DATA_DIR / "processed"
 REPORTS_DIR = ROOT_DIR / "reports"
 CONFIG_DIR = ROOT_DIR / "config"
+EXPORTS_DIR = ROOT_DIR / "exports"
 
 CANDIDATE_CSV_PATH = INTERIM_DIR / "candidate_products.csv"
 EXCLUDED_PRODUCTS_CSV_PATH = INTERIM_DIR / "excluded_products.csv"
@@ -286,6 +287,13 @@ EXTRACTION_RATE_LIMIT_BASE_WAIT_SECONDS = 5
 # before a run; the actual run may be entirely free-tier.
 EXTRACTION_EST_INPUT_COST_PER_MILLION = 0.075
 EXTRACTION_EST_OUTPUT_COST_PER_MILLION = 0.30
+
+
+# --- weekly brief ------------------------------------------------------
+
+BRIEF_MODEL = EXTRACTION_MODEL  # reuse the same model/key; change independently if desired
+BRIEF_TOP_N_CHANGES = 5
+BRIEF_MIN_QUARTER_REVIEWS = 10  # guard against a tiny-n quarter producing a noisy "100% complaint share" headline
 
 
 def compute_review_id(user_id: str, parent_asin: str, timestamp: int, text: str) -> str:

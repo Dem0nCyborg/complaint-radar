@@ -393,3 +393,41 @@ Format: **Decision** — Rejected alternative(s) — Why.
     against a hand-computed 10-pair synthetic dataset (accuracy, kappa,
     severity exact-match/mean-abs-diff, and every per-category
     precision/recall value matched hand calculation exactly).
+
+## Phase 3: Tableau exports, weekly brief
+
+29. **`src/export_tableau.py` writes a detail CSV plus three pre-aggregated
+    CSVs** (complaint share by brand within category, quarterly trend by
+    brand, severity vs. star rating) rather than one wide denormalized
+    table. — *Rejected:* exporting only the per-review detail table and
+    doing all aggregation inside Tableau. — *Why:* the pre-aggregated
+    tables are small and the aggregation logic (what counts as "a
+    complaint," how quarters are computed) lives once in Python, verified
+    by a unit test against synthetic data, rather than being re-derived
+    (and potentially re-derived inconsistently) by Tableau calculated
+    fields. The 4th planned chart (complaint category breakdown) uses the
+    detail CSV directly — a plain category count doesn't need its own
+    pre-agg file. Verified against a synthetic 2-brand/3-quarter dataset:
+    all four CSVs' row counts and aggregated values matched hand
+    calculation.
+
+30. **`src/brief.py`: every number in the generated brief is computed in
+    SQL first, then validated against that same result set after
+    generation** — the LLM gets only the SQL output as its data, explicit
+    instructions not to introduce any other number, and the brief is not
+    saved if `validate_brief_numbers()` finds a number in the text that
+    doesn't match (within rounding/percent-vs-decimal tolerance) anything
+    in the SQL results. — *Rejected:* trusting a "use only these numbers"
+    instruction without a mechanical check; computing the numbers
+    conversationally rather than in SQL. — *Why:* an LLM asked to write
+    prose from data will sometimes smooth or round in a way that drifts
+    into a number that was never computed; a brief whose job is to be
+    trusted at a glance needs every figure to be traceable to the query
+    that produced it, not just "probably fine." The biggest-change query
+    also has a minimum-sample-size guard
+    (`BRIEF_MIN_QUARTER_REVIEWS`, default 10): verified against a synthetic
+    dataset where a 2-review brand swung from 0% to 100% complaint share
+    (the single biggest possible percentage change) and was correctly
+    excluded in favor of a real, well-supported 20-point swing on a
+    20-review quarter — without the guard, the brief's top headline would
+    have been noise.
