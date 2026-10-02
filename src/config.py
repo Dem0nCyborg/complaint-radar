@@ -270,11 +270,14 @@ REFERENCE_LABELS_CSV_PATH = INTERIM_DIR / "reference_labels.csv"
 LABEL_SAMPLE_EXPORT_CSV_PATH = INTERIM_DIR / "label_sample_export.csv"
 AGREEMENT_STATS_PATH = INTERIM_DIR / "agreement_stats.json"
 
-# VERIFY BEFORE RUNNING: model name, pricing, and free-tier rate limits are
-# all time-sensitive and may have changed since this was written. Check
-# https://ai.google.dev/gemini-api/docs/models and
-# https://ai.google.dev/gemini-api/docs/pricing before a real run.
-EXTRACTION_MODEL = "gemini-2.5-flash"
+# Checked 2026-10-02 against https://ai.google.dev/gemini-api/docs/models
+# and https://ai.google.dev/gemini-api/docs/pricing. gemini-2.5-flash is now
+# limited to accounts that already used it, so a new key would likely be
+# refused. gemini-3.5-flash-lite has a free tier and the lowest paid price
+# of the current Flash models, which fits its role as the cheap extractor.
+# Free-tier rate limits are not published in the docs; AI Studio shows them
+# per account. Recheck all of this if you run much later.
+EXTRACTION_MODEL = "gemini-3.5-flash-lite"
 EXTRACTION_API_BASE = "https://generativelanguage.googleapis.com/v1beta"
 
 EXTRACTION_BATCH_SIZE = 20  # reviews per API request
@@ -282,11 +285,11 @@ EXTRACTION_MAX_MALFORMED_RETRIES = 3  # per batch, before giving up on it
 EXTRACTION_MAX_RATE_LIMIT_RETRIES = 8  # per request, exponential backoff
 EXTRACTION_RATE_LIMIT_BASE_WAIT_SECONDS = 5
 
-# Placeholder estimate, $ per 1M tokens -- NOT verified against current
-# pricing. Used only to print a rough order-of-magnitude cost estimate
-# before a run; the actual run may be entirely free-tier.
-EXTRACTION_EST_INPUT_COST_PER_MILLION = 0.075
-EXTRACTION_EST_OUTPUT_COST_PER_MILLION = 0.30
+# Paid-tier list price for gemini-3.5-flash-lite (text), $ per 1M tokens,
+# as published on 2026-10-02. Used only for the pre-run estimate; on the
+# free tier the run costs nothing.
+EXTRACTION_EST_INPUT_COST_PER_MILLION = 0.30
+EXTRACTION_EST_OUTPUT_COST_PER_MILLION = 2.50
 
 
 # --- weekly brief ------------------------------------------------------

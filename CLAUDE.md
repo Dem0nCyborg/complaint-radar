@@ -461,3 +461,17 @@ Format: **Decision** — Rejected alternative(s) — Why.
       durability_defect.
     These are model-generated labels, not human annotations. The metric
     computed against them is model-to-model agreement.
+
+32. **Extraction model changed from `gemini-2.5-flash` to
+    `gemini-3.5-flash-lite`, and estimate prices updated to the published
+    paid rates ($0.30 in / $2.50 out per 1M tokens), checked 2026-10-02.**
+    — *Rejected:* keeping 2.5 Flash; using `gemini-3.8-flash`. — *Why:*
+    Google now limits the 2.5 models to accounts that already used them,
+    so a new API key would likely be refused. Flash-Lite has a free tier
+    and is the cheapest current Flash model, which suits its role in this
+    project: a cheap model measured against stronger reference labels.
+    If it agrees well, that is the useful finding (the cheap model is good
+    enough). If it doesn't, 3.8 Flash is the next thing to try, and the
+    comparison itself becomes the result. Estimate after the change: 8
+    calls for the 150-review pilot, 200 calls and about $0.59 at paid
+    rates for the full 4,000, likely $0 on the free tier.
