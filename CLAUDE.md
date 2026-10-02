@@ -475,3 +475,38 @@ Format: **Decision** — Rejected alternative(s) — Why.
     comparison itself becomes the result. Estimate after the change: 8
     calls for the 150-review pilot, 200 calls and about $0.59 at paid
     rates for the full 4,000, likely $0 on the free tier.
+
+33. **`src/brief.py`'s significance test upgraded from an uncorrected
+    two-proportion z-test to a Benjamini-Hochberg false discovery rate
+    correction applied across all tested quarter-over-quarter pairs at
+    once.** — *Rejected:* the uncorrected z-test (p < 0.05, no
+    multiple-comparisons adjustment) — it demonstrably did not solve the
+    problem it was added for. On real data it let Cosori's
+    -25.3-then-+26.3-point reversal straight through: both legs came back
+    individually "significant" (p=0.026 and p=0.017). With 79
+    brand/category/quarter pairs tested, several clearing p<0.05 by chance
+    alone is expected, not surprising, and an immediate reversal (sharp
+    drop followed by a sharp rise, or vice versa) is the textbook signature
+    of exactly that. *Also rejected:* Bonferroni correction — too
+    conservative at this sample size (79 tests; it would very likely leave
+    nothing significant regardless of whether a real effect exists, making
+    the brief uninformative by construction rather than by honest finding).
+    *Also rejected:* a rule that specifically detects and excludes
+    reversals — it would fix the one case that happened to be observed
+    without addressing the general multiple-comparisons problem underneath
+    it (a non-reversing but still spurious swing would sail through
+    unchanged). — *Why BH:* it controls the expected false discovery rate
+    across the whole set of 79 tests rather than per test, which is the
+    actual shape of the problem (many simultaneous comparisons, not one).
+    **Result on real data: 0 of 79 candidate changes survive BH correction
+    (q <= 0.05) this period** — every raw swing, including Cosori's, has an
+    adjusted q around 0.41-0.50. The brief now states "No statistically
+    reliable changes in this period" and separately lists the largest raw
+    swings labeled NOT significant, generated deterministically (no LLM
+    call made for this branch, since there's no judgment call left once
+    nothing is significant). Caught during implementation: the first draft
+    compared adjusted p-values with strict `<` against alpha; the correct
+    BH decision rule is `<=` (verified against a classic textbook example:
+    10 p-values with alpha=0.05 should yield exactly 2 significant results,
+    and `<` yielded 0). Validated the BH implementation itself against that
+    textbook example before trusting it on real data.

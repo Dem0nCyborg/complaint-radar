@@ -296,7 +296,8 @@ EXTRACTION_EST_OUTPUT_COST_PER_MILLION = 2.50
 
 BRIEF_MODEL = EXTRACTION_MODEL  # reuse the same model/key; change independently if desired
 BRIEF_TOP_N_CHANGES = 5
-BRIEF_MIN_QUARTER_REVIEWS = 10  # guard against a tiny-n quarter producing a noisy "100% complaint share" headline
+BRIEF_MIN_QUARTER_REVIEWS = 10  # cheap pre-filter; NOT sufficient alone -- see BRIEF_SIGNIFICANCE_ALPHA
+BRIEF_SIGNIFICANCE_ALPHA = 0.05  # two-proportion z-test threshold; a QoQ change must clear this to be reportable
 
 
 def compute_review_id(user_id: str, parent_asin: str, timestamp: int, text: str) -> str:
